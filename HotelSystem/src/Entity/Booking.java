@@ -1,4 +1,4 @@
-package Entity;
+package entity;
 
 public class Booking {
     private String BookingID;
