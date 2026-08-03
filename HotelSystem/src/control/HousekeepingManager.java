@@ -1,8 +1,8 @@
 package control;
 
-import Entity.Room;
-import Entity.HousekeepingLog;
-import Entity.StatusRecord;
+import entity.Room;
+import entity.HousekeepingLog;
+import entity.StatusRecord;
 import adt.LinkedStack;
 
 public class HousekeepingManager {
