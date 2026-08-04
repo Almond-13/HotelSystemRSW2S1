@@ -1,6 +1,6 @@
 package adt;
 
-public class ArrayQueue<T> implements QueueInterface<T> {
+public class CircularArrayQueue<T> implements QueueInterface<T> {
     private static final int DEFAULT_CAPACITY = 10;
 
     private T[] queue;
@@ -8,11 +8,11 @@ public class ArrayQueue<T> implements QueueInterface<T> {
     private int backIndex;
     private int size;
 
-    public ArrayQueue() {
+    public CircularArrayQueue() {
         this(DEFAULT_CAPACITY);
     }
 
-    public ArrayQueue(int initialCapacity) {
+    public CircularArrayQueue(int initialCapacity) {
         if (initialCapacity < 1) {
             initialCapacity = DEFAULT_CAPACITY;
         }
@@ -52,11 +52,11 @@ public class ArrayQueue<T> implements QueueInterface<T> {
     }
 
     @Override
-    public T getFront() {
+    public T getFront(){
         if (isEmpty()) {
             return null;
         }
-        return queue[frontIndex];
+        return queue[frontIndex]; 
     }
 
     @Override

@@ -1,7 +1,7 @@
 package control;
 
 import adt.QueueInterface;
-import adt.ArrayQueue;
+import adt.CircularArrayQueue;
 import entity.Booking;
 
 public class WIRegistrationControl {
@@ -9,7 +9,7 @@ public class WIRegistrationControl {
     private QueueInterface<Booking> bookingQueue;
 
     public WIRegistrationControl() {
-        bookingQueue = new ArrayQueue<>();
+        bookingQueue = new CircularArrayQueue<>();
     }
 
     public void registerGuest(Booking booking) {
@@ -24,10 +24,10 @@ public class WIRegistrationControl {
     }
 
     public Booking viewNextGuest() {
-        if (bookingQueue.isEmpty())
+        if (    bookingQueue.isEmpty())
             return null;
 
-        return bookingQueue.getFront();
+        return bookingQueue.peek();
     }
 
     public QueueInterface<Booking> getBookingQueue() {

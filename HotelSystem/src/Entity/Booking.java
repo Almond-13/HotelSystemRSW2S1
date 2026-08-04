@@ -3,7 +3,7 @@ package entity;
 public class Booking {
     private String BookingID;
     private Guest Guest;
-    private String roomType;
+    private Room roomType;
     private int numberOfGuests;
     private String checkInDate;
     private String checkOutDate;
@@ -20,23 +20,19 @@ public class Booking {
 
     }
 
-
+    //Getter
     public String getBookingID() {
         return BookingID;
     }
-
     public Guest getGuest() {
         return Guest;
     }
-
-    public String getRoomType() {
+    public Room getRoomType() {
         return roomType;
     }
-
     public int getNumberOfGuests() {
         return numberOfGuests;
     }
-
     public String getCheckInDate() {
         return checkInDate;
     }

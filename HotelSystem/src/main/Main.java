@@ -1,0 +1,49 @@
+package main;
+import java.util.Scanner;
+
+import boundary.HousekeepingUI;
+import boundary.WIRegistrationUI;
+
+public class Main {
+    public static void main(String[] args){
+        Scanner input = new Scanner(System.in);
+        int choice;
+    do {
+        System.out.println("\n============ Mimi Hotel ============");
+        System.out.println("\n1. Walk-In Registration");
+        System.out.println("\n2. VIP Room Allocation");
+        System.out.println("\n3. Housekeeping");
+        System.out.println("\n4. Loyalty and Rewards");
+        System.out.println("\n0. Exit");
+
+        System.out.print("\n Enter Your Choice (0 for Exit): ");
+        choice = input.nextInt();
+
+        switch(choice)
+        {
+            case 1:
+                WIRegistrationUI WIRUI = new WIRegistrationUI();
+                break;
+            case 2:
+                //VIP
+            case 3:
+                HousekeepingUI housekeepingManager = new HousekeepingUI();
+                break;
+            case 4:
+                //VIP
+            case 0:
+                System.out.println("Exit System...");
+                break;
+            default:
+                System.out.println("Invalid choice, please try again.");
+                break;
+        }
+
+    } while(choice != 0);
+    input.close();
+    }
+}
+
+
+
+
