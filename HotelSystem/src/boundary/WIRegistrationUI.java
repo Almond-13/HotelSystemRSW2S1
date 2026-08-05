@@ -1,69 +1,56 @@
 package boundary;
 
-import adt.CircularArrayQueue;
-import control.WIRegistrationControl;
 import java.util.Scanner;
-import entity.*;
+import control.WIRegistrationControl;
 
 public class WIRegistrationUI {
 
-    private CircularArrayQueue<Guest> GQueue;
     private Scanner input;
+    private WIRegistrationControl control;
 
-
-    public WIRegistrationControl() {
-
-        GQueue = new CircularArrayQueue<>();
+    public WIRegistrationUI() {
         input = new Scanner(System.in);
-
+        control = new WIRegistrationControl();
     }
 
-
-    public void start() {
+    public void ShowMenu() {
 
         int choice;
 
         do {
 
-            System.out.println("\n===== Walk-In Registration =====");
-            System.out.println("1. Register New Customer");
-            System.out.println("2. Room Available");
-            System.out.println("3. Check In & Check Out");
+            System.out.println("\n========== Walk-In Registration ==========");
+            System.out.println("1. Register Customer");
+            System.out.println("2. Check Room Availability");
+            System.out.println("3. Check In Guest");
             System.out.println("0. Back to Main Menu");
 
-            System.out.print("Enter your choice: ");
+            System.out.print("\nEnter your choice: ");
             choice = input.nextInt();
 
+            switch (choice) {
 
-            switch(choice)
-            {
                 case 1:
-                    WIRegistrationControl WIRControl = new WIRegistrationControl();
+                    control.RGuest();
                     break;
-
 
                 case 2:
-                    //System.out.println("Process Customer");
+                    control.CheckIn();
                     break;
-
 
                 case 3:
-                    System.out.println("View Queue");
+                    //control.CheckOut();
                     break;
-
 
                 case 0:
                     System.out.println("Returning to Main Menu...");
                     break;
 
-
                 default:
-                    System.out.println("Invalid choice");
+                    System.out.println("Invalid choice. Please try again.");
                     break;
             }
 
-
-        } while(choice != 0);
-
+        } while (choice != 0);
     }
 }

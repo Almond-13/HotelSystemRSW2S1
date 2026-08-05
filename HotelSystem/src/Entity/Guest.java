@@ -3,12 +3,12 @@ package entity;
 public class Guest {
     private String GuestID;
     private String Name;
-    private int ICPassportNo;
+    private String ICPassportNo;
     private String PhoneNumber;
     private String Email;
 
     public Guest(){}
-    public Guest(String GuestID,String Name, int ICPassportNo, String PhoneNumber, String Email){
+    public Guest(String GuestID,String Name, String ICPassportNo, String PhoneNumber, String Email){
         this.GuestID = GuestID;
         this.Name=Name;
         this.ICPassportNo= ICPassportNo;
@@ -25,7 +25,7 @@ public class Guest {
         return Name;
     }
 
-    public int getICPassportNo(){
+    public String getICPassportNo(){
         return ICPassportNo;
     }
     
@@ -47,7 +47,7 @@ public class Guest {
     public void setPhoneNumber(String PhoneNumber){
         this.PhoneNumber = PhoneNumber;
     }
-    public void setICPassportNo(int ICPassportNo){
+    public void setICPassportNo(String ICPassportNo){
         this.ICPassportNo = ICPassportNo;
     }
     public void setEmail(String Email){

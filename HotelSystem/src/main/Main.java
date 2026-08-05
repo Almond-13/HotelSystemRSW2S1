@@ -10,11 +10,11 @@ public class Main {
         int choice;
     do {
         System.out.println("\n============ Mimi Hotel ============");
-        System.out.println("\n1. Walk-In Registration");
-        System.out.println("\n2. VIP Room Allocation");
-        System.out.println("\n3. Housekeeping");
-        System.out.println("\n4. Loyalty and Rewards");
-        System.out.println("\n0. Exit");
+        System.out.println("1. Walk-In Registration");
+        System.out.println("2. VIP Room Allocation");
+        System.out.println("3. Housekeeping");
+        System.out.println("4. Loyalty and Rewards");
+        System.out.println("0. Exit");
 
         System.out.print("\n Enter Your Choice (0 for Exit): ");
         choice = input.nextInt();
@@ -23,6 +23,7 @@ public class Main {
         {
             case 1:
                 WIRegistrationUI WIRUI = new WIRegistrationUI();
+                WIRUI.ShowMenu();
                 break;
             case 2:
                 //VIP
