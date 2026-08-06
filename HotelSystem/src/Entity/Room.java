@@ -6,6 +6,7 @@ public class Room {
     private String roomType;
     private String currentStatus;
     private String occupancyStatus;
+    private Guest CGuest;
 
     public Room(String roomNo, String roomType){
         this.roomNo = roomNo;
@@ -18,7 +19,9 @@ public class Room {
     public String getRoomType() { return roomType; }
     public String getCurrentStatus() { return currentStatus; }
     public String getOccupancyStatus() { return occupancyStatus; }
-  
+    public Guest getCGuest() {return CGuest;}
+
+    public void setCGuest(Guest CGuest) {this.CGuest = CGuest;}
     public void setCurrentStatus(String currentStatus) { this.currentStatus = currentStatus; }
     public void setOccupancyStatus(String OccupancyStatus) { this.occupancyStatus = OccupancyStatus; }
 

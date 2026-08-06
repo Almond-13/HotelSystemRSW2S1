@@ -61,16 +61,8 @@ public class WIRegistrationControl {
     private ArrayList<Room> rooms;
     
     public void CheckIn() {
-        if(guestQueue.isEmpty()){
-        System.out.println("No customer waiting for check in.");
-        return;
-    }
-    //Check whether contain registration guest.
-        Guest guest = guestQueue.peek();
-        System.out.println("\nCurrent Guest:");
-        System.out.println(guest);
         // Show the All the Room
-        System.out.println("\n================ Available Rooms ================");
+        System.out.println("\n================ All Room Status ================");
         System.out.printf("%-10s %-15s %-20s %-20s%n",
                 "Room No",
                 "Room Type",
@@ -82,25 +74,32 @@ public class WIRegistrationControl {
         ArrayList<Room> availableRooms = new ArrayList<>();
         for (int i = 0; i < rooms.size(); i++) {
             Room room = rooms.get(i);
-            if (room.isBookable()) {
-                System.out.printf("%-10s %-15s %-20s %-20s%n",
-                        room.getRoomNo(),
-                        room.getRoomType(),
-                        room.getCurrentStatus(),
-                        room.getOccupancyStatus()
-                );
+            //Show the room detail from txt file.
+            System.out.printf("%-10s %-15s %-20s %-20s%n",
+                    room.getRoomNo(),
+                    room.getRoomType(),
+                    room.getCurrentStatus(),
+                    room.getOccupancyStatus());
+                availableRooms.add(room);
                 found = true;
             }
-        }
         if(!found) {
-
             System.out.println("No Available Room Now.");
             return;
         }
+                if(guestQueue.isEmpty()){
+        System.out.println("No customer waiting for check in.");
+        return;
+    }
+    //Guest Information
+        Guest guest = guestQueue.peek();
+        System.out.println("\nCurrent Guest:");
+        System.out.println(guest);
         //Enter for Return to SubMenu
-        System.out.println("\nPress Enter to return...");
+        System.out.println("\nEnter you Room Number (Enter to return...");
         String selectedRoomNo = input.nextLine();
-            Room selectedRoom = null;
+        Room selectedRoom = null;
+        System.out.println("You entered: " + selectedRoomNo);
 
 
         //Select the Room by RoomNo.
@@ -114,13 +113,12 @@ public class WIRegistrationControl {
 
         }
         if(selectedRoom == null) {
-            System.out.println("Invalid Room Selection.");
+            System.out.println("Exit...");
             return;
-
         }
         // Update Room Status
         selectedRoom.setOccupancyStatus("Occupied");
-
+        selectedRoom.setCGuest(guest);
         // Remove guest from queue after successful check in
         guestQueue.dequeue();
         System.out.println("\n===== Check In Successful =====");

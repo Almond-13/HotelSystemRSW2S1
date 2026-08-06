@@ -7,6 +7,9 @@ import boundary.WIRegistrationUI;
 public class Main {
     public static void main(String[] args){
         Scanner input = new Scanner(System.in);
+        WIRegistrationUI WIRUI = new WIRegistrationUI();
+        HousekeepingUI HKUI = new HousekeepingUI();
+
         int choice;
     do {
         System.out.println("\n============ Mimi Hotel ============");
@@ -19,16 +22,15 @@ public class Main {
         System.out.print("\n Enter Your Choice (0 for Exit): ");
         choice = input.nextInt();
 
+
         switch(choice)
         {
             case 1:
-                WIRegistrationUI WIRUI = new WIRegistrationUI();
                 WIRUI.ShowMenu();
                 break;
             case 2:
                 //VIP
             case 3:
-                HousekeepingUI housekeepingManager = new HousekeepingUI();
                 break;
             case 4:
                 //VIP

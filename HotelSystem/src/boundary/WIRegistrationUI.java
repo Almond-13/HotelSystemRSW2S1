@@ -21,8 +21,8 @@ public class WIRegistrationUI {
 
             System.out.println("\n========== Walk-In Registration ==========");
             System.out.println("1. Register Customer");
-            System.out.println("2. Check Room Availability");
-            System.out.println("3. Check In Guest");
+            System.out.println("2. Check In");
+            System.out.println("3. Check Out");
             System.out.println("0. Back to Main Menu");
 
             System.out.print("\nEnter your choice: ");
@@ -40,6 +40,10 @@ public class WIRegistrationUI {
 
                 case 3:
                     //control.CheckOut();
+                    break;
+
+                case 4:
+                    //control.View Summary();
                     break;
 
                 case 0:

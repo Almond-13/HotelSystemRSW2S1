@@ -53,4 +53,8 @@ public class Guest {
     public void setEmail(String Email){
         this.Email = Email;
     }
+    @Override
+    public String toString() {
+        return "Guest ID: " + GuestID +"\nName: " + Name +"\nPhone: " + PhoneNumber;
+}
 }
