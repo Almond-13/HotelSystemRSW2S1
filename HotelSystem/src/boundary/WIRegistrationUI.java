@@ -39,7 +39,7 @@ public class WIRegistrationUI {
                     break;
 
                 case 3:
-                    //control.CheckOut();
+                    control.CheckOut();
                     break;
 
                 case 4:

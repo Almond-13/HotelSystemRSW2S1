@@ -3,16 +3,16 @@ package entity;
 public class Booking {
     private String BookingID;
     private Guest Guest;
-    private Room roomType;
-    private int numberOfGuests;
+    private Room room;
     private String checkInDate;
     private String checkOutDate;
     private String Status;
 
     public Booking(){}
-    public Booking(String BookingID, Guest Guest, String roomType, int numberOfGuests, String checkInDate, String checkOutDate, String Status){
+    public Booking(String BookingID, Guest Guest, Room room, String checkInDate, String checkOutDate, String Status){
         this.BookingID = BookingID;
         this.Guest=Guest;
+        this.room=room;
         this.Status=Status;
         this.checkInDate=checkInDate;
         this.checkOutDate=checkOutDate;
@@ -27,20 +27,22 @@ public class Booking {
     public Guest getGuest() {
         return Guest;
     }
-    public Room getRoomType() {
-        return roomType;
-    }
-    public int getNumberOfGuests() {
-        return numberOfGuests;
+    public Room getRoom() {
+        return room;
     }
     public String getCheckInDate() {
         return checkInDate;
     }
-    public String getcheckOutDate() {
+    public String getCheckOutDate() {
         return checkOutDate;
     }
     public String getStatus() {
         return Status;
+    }
+
+    //Setter
+    public void setStatus(String Status){
+        this.Status=Status;
     }
 
 }

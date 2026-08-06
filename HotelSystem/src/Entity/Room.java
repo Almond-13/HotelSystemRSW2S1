@@ -6,7 +6,7 @@ public class Room {
     private String roomType;
     private String currentStatus;
     private String occupancyStatus;
-    private Guest CGuest;
+    private Guest CGuest; //For Guest Check Out (due to Guest Check-In will dequeue)
 
     public Room(String roomNo, String roomType){
         this.roomNo = roomNo;
