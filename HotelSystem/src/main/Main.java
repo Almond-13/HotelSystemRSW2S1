@@ -3,12 +3,14 @@ import java.util.Scanner;
 
 import boundary.HousekeepingUI;
 import boundary.WIRegistrationUI;
+import dao.RoomDAO;
 
 public class Main {
     public static void main(String[] args){
         Scanner input = new Scanner(System.in);
-        WIRegistrationUI WIRUI = new WIRegistrationUI();
-        HousekeepingUI HKUI = new HousekeepingUI();
+        RoomDAO roomDAO = new RoomDAO();
+        WIRegistrationUI WIRUI = new WIRegistrationUI(roomDAO);
+        HousekeepingUI HKUI = new HousekeepingUI(input, roomDAO);
 
         int choice;
     do {
@@ -20,7 +22,7 @@ public class Main {
         System.out.println("0. Exit");
 
         System.out.print("\n Enter Your Choice (0 for Exit): ");
-        choice = input.nextInt();
+        choice = Integer.parseInt(input.nextLine().trim());
 
 
         switch(choice)
@@ -31,6 +33,7 @@ public class Main {
             case 2:
                 //VIP
             case 3:
+                HKUI.run();
                 break;
             case 4:
                 //VIP

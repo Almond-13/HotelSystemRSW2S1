@@ -2,16 +2,17 @@ package boundary;
 
 import java.util.Scanner;
 import control.WIRegistrationControl;
+import dao.RoomDAO;
 
 public class WIRegistrationUI {
 
     private Scanner input;
     private WIRegistrationControl control;
 
-    public WIRegistrationUI() {
+    public WIRegistrationUI(RoomDAO roomDAO) {
         input = new Scanner(System.in);
-        control = new WIRegistrationControl();
-    }
+        control = new WIRegistrationControl(roomDAO);
+}
 
     public void ShowMenu() {
 
