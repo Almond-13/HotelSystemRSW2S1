@@ -2,6 +2,7 @@ package boundary;
 
 import control.HousekeepingManager;
 import entity.Room;
+import dao.RoomDAO;
 import java.util.Scanner;
 
 public class HousekeepingUI {
@@ -9,17 +10,9 @@ public class HousekeepingUI {
     private HousekeepingManager manager;
     private Scanner sc;
 
-    public HousekeepingUI() {
-        manager = new HousekeepingManager();
-        sc = new Scanner(System.in);
-        seedSampleData();
-    }
-
-    private void seedSampleData() {
-        manager.registerRoom(new Room("101", "Standard"));
-        manager.registerRoom(new Room("102", "Standard"));
-        manager.registerRoom(new Room("201", "Deluxe"));
-        manager.registerRoom(new Room("301", "Suite"));
+    public HousekeepingUI(Scanner sc, RoomDAO roomDAO) {
+        manager = new HousekeepingManager(roomDAO.getRooms());
+        this.sc = sc;
     }
 
     private void clearScreen() {
@@ -76,34 +69,34 @@ public class HousekeepingUI {
     // ---------- View All + nested actions ----------
 
     private void viewAllFlow() {
-    int subChoice;
-    do {
-        System.out.println();
-        manager.generateRoomStatusReport("ALL");
-        System.out.println();
-        System.out.printf("%-30s %s%n", "[1] Update Room Status", "[2] Rollback Room Status");
-        System.out.printf("%-30s %s%n", "[3] View Room Status History", "[4] Back To Main Menu");
-        subChoice = readMenuChoice(1, 4);
-        System.out.println();
+        int subChoice;
+        do {
+            System.out.println();
+            manager.generateRoomStatusReport("ALL");
+            System.out.println();
+            System.out.printf("%-30s %s%n", "[1] Update Room Status", "[2] Rollback Room Status");
+            System.out.printf("%-30s %s%n", "[3] View Room Status History", "[4] Back To Main Menu");
+            subChoice = readMenuChoice(1, 4);
+            System.out.println();
 
-        switch (subChoice) {
-            case 1:
-                updateStatusFlow();
-                pauseForUser();
-                break;
-            case 2:
-                rollbackFlow();
-                pauseForUser();
-                break;
-            case 3:
-                historyFlow();
-                pauseForUser();
-                break;
-            case 4:
-                break;
-        }
-    } while (subChoice != 4);
-}
+            switch (subChoice) {
+                case 1:
+                    updateStatusFlow();
+                    pauseForUser();
+                    break;
+                case 2:
+                    rollbackFlow();
+                    pauseForUser();
+                    break;
+                case 3:
+                    historyFlow();
+                    pauseForUser();
+                    break;
+                case 4:
+                    break;
+            }
+        } while (subChoice != 4);
+    }
 
     // ---------- flows ----------
 
@@ -111,31 +104,16 @@ public class HousekeepingUI {
         System.out.println("=== UPDATE ROOM STATUS ===\n");
         String roomNo = readExistingRoomNo("Enter room number (e.g. 101): ");
 
+        String currentStatus = manager.getCurrentStatus(roomNo);
+        String nextStatus = manager.getNextStatus(roomNo);
+
+        System.out.println();
+        if (nextStatus == null) {
+            System.out.println("Room " + roomNo + " is '" + currentStatus + "' - no housekeeping action needed.");
+            return;
+        }
+
         while (true) {
-            String currentStatus = manager.getCurrentStatus(roomNo);
-            String nextStatus = manager.getNextStatus(roomNo);
-
-            System.out.println();
-            if (nextStatus == null) {
-                System.out.println("Room " + roomNo + " is at '" + currentStatus + "' - the final stage.");
-                System.out.println();
-                System.out.println(" 1. Start new cleaning cycle (guest checked out)");
-                System.out.println(" 0. Cancel");
-                int choice = readMenuChoice(0, 1);
-                if (choice == 0) {
-                    return;
-                }
-                String staffId = readNonEmptyString("\nEnter staff ID (e.g. S001): ");
-                boolean started = manager.startNewCycle(roomNo, staffId);
-                System.out.println();
-                if (started) {
-                    System.out.println("[OK] Room " + roomNo + " is now 'Dirty' - new cycle started.");
-                } else {
-                    System.out.println("[!] " + manager.getLastError());
-                }
-                return;
-            }
-
             System.out.println("Room:            " + roomNo);
             System.out.println("Current status:  " + currentStatus);
             System.out.println("Next status:     " + nextStatus);
@@ -239,9 +217,5 @@ public class HousekeepingUI {
             }
             return roomNo;
         }
-    }
-
-    public static void main(String[] args) {
-        new HousekeepingUI().run();
     }
 }

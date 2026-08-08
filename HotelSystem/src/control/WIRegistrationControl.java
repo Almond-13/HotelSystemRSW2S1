@@ -16,13 +16,13 @@ public class WIRegistrationControl {
     private int bookingCount = 1;
     String bookingID = "B" + bookingCount++;
 
-    public WIRegistrationControl() {
+    public WIRegistrationControl(RoomDAO roomDAO) {
         guestQueue = new CircularArrayQueue<>();
         input = new Scanner(System.in);
-        roomDAO = new RoomDAO();
+        this.roomDAO = roomDAO;
         rooms = roomDAO.getRooms();
         book = new ArrayList<>();
-    }
+}
 
     // ===================================================================
     // Register Walk-In Guest
@@ -85,8 +85,10 @@ public class WIRegistrationControl {
                     room.getRoomType(),
                     room.getCurrentStatus(),
                     room.getOccupancyStatus());
+                if (room.isBookable()) {
             availableRooms.add(room);
             found = true;
+        }
         }
         if (!found) {
             System.out.println("No Available Room Now.");
