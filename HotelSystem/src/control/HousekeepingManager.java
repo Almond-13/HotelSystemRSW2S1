@@ -4,11 +4,12 @@ import entity.Room;
 import entity.HousekeepingLog;
 import entity.StatusRecord;
 import adt.LinkedStack;
+import adt.ArrayList;
 
 public class HousekeepingManager {
 
     private static final String[] SEQUENCE = {
-        "Dirty", "Cleaning In Progress", "Inspected", "Ready for Check-In"
+        "Dirty", "Cleaning In Progress", "Inspected", "Clean"
     };
 
     private HousekeepingLog[] logs;
@@ -44,7 +45,15 @@ public class HousekeepingManager {
         }
         return null;
     }
-
+    
+    public HousekeepingManager(ArrayList<Room> rooms) {
+        logs = new HousekeepingLog[10];
+        logCount = 0;
+        lastError = "";
+        for (int i = 0; i < rooms.size(); i++) {
+            registerRoom(rooms.get(i));
+        }
+    }
     public boolean roomExists(String roomNo) { return findLog(roomNo) != null; }
 
     public String getCurrentStatus(String roomNo) {
@@ -115,8 +124,8 @@ public class HousekeepingManager {
     }
 
     String currentStatus = log.getRoom().getCurrentStatus();
-    if (!currentStatus.equalsIgnoreCase("Ready for Check-In")) {
-        lastError = "Room '" + roomNo + "' must be 'Ready for Check-In' before starting a new cycle (currently '" + currentStatus + "').";
+    if (!currentStatus.equalsIgnoreCase("Clean")) {
+        lastError = "Room '" + roomNo + "' must be 'Clean' before starting a new cycle (currently '" + currentStatus + "').";
         return false;
     }
 
