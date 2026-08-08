@@ -15,35 +15,69 @@ public class WIRegistrationControl {
     // For Booking Part
     private int bookingCount = 1;
     String bookingID = "B" + bookingCount++;
+    private int guestCounter = 1;
 
     public WIRegistrationControl(RoomDAO roomDAO) {
         guestQueue = new CircularArrayQueue<>();
         input = new Scanner(System.in);
-        this.roomDAO = roomDAO;
         rooms = roomDAO.getRooms();
         book = new ArrayList<>();
-}
+    }
 
     // ===================================================================
     // Register Walk-In Guest
     // ===================================================================
     public void RGuest() {
+
         System.out.println("\n===== Register Guest =====");
 
         // Guest ID is the Unique ID, so need to generate from System.
-        System.out.print("Guest ID: ");
-        String guestID = input.next();
-        input.nextLine();
+        String guestID = String.format("G%03d", guestCounter++);
 
         // Input all the infomation of Guest and use nextLine to avoid next question.
-        System.out.print("Guest Name: ");
-        String name = input.nextLine();
+        String name;
+        while (true) {
+            System.out.print("Guest Name: ");
+            name = input.nextLine().trim();
 
-        System.out.print("IC / Passport No: ");
-        String icPassportNo = input.nextLine();
+            if (name.isEmpty()) {
+                System.out.println("Guest Name cannot be empty.");
+            } else {
+                break;
+            }
+        }
 
-        System.out.print("Phone Number: ");
-        String phoneNumber = input.nextLine();
+        String icPassportNo;
+        while (true) {
+            System.out.print("IC / Passport No: ");
+            icPassportNo = input.nextLine().trim();
+
+            if (icPassportNo.isEmpty()) {
+                System.out.println("IC / Passport No. cannot be empty.");
+            } else if (!icPassportNo.matches("\\d+")) {
+                System.out.println("IC / Passposrt No. must contain digits only.");
+            } else if (icPassportNo.length() < 8 || icPassportNo.length() > 12) {
+                System.out.println("IC / Passport No. must be 8-12 element.");
+            } else {
+                break;
+            }
+        }
+
+        String phoneNumber;
+        while (true) {
+            System.out.print("Phone Number: ");
+            phoneNumber = input.nextLine().trim();
+
+            if (phoneNumber.isEmpty()) {
+                System.out.println("Phone Number cannot be empty.");
+            } else if (!phoneNumber.matches("\\d+")) {
+                System.out.println("Phone Number must contain digits only.");
+            } else if (phoneNumber.length() < 10 || phoneNumber.length() > 12) {
+                System.out.println("Phone Number must be 10 to 12 digits.");
+            } else {
+                break;
+            }
+        }
 
         // Store all the info just now into Queues
         Guest guest = new Guest(
@@ -55,11 +89,11 @@ public class WIRegistrationControl {
         guestQueue.enqueue(guest);
 
         System.out.println("\nGuest registered successfully!");
+        System.out.println("Guest ID: " + guestID);
         System.out.println("Guest has been added to the waiting queue.");
     }
 
     // Call Fixed Data (which is Room No and Room Type)
-    private RoomDAO roomDAO;
     private ArrayList<Room> rooms;
 
     // =====================================================================
@@ -85,10 +119,10 @@ public class WIRegistrationControl {
                     room.getRoomType(),
                     room.getCurrentStatus(),
                     room.getOccupancyStatus());
-                if (room.isBookable()) {
-            availableRooms.add(room);
-            found = true;
-        }
+            if (room.isBookable()) {
+                availableRooms.add(room);
+                found = true;
+            }
         }
         if (!found) {
             System.out.println("No Available Room Now.");
@@ -103,22 +137,32 @@ public class WIRegistrationControl {
         System.out.println("\nCurrent Guest:");
         System.out.println(guest);
         // Enter for Return to SubMenu
-        System.out.println("\nEnter you Room Number (Enter to return...");
-        String selectedRoomNo = input.nextLine();
+        System.out.println("\nEnter your Room Number (Enter to return): ");
         Room selectedRoom = null;
 
-        // Select the Room by RoomNo.
-        for (int i = 0; i < availableRooms.size(); i++) {
-            Room room = availableRooms.get(i);
-            if (room.getRoomNo().equals(selectedRoomNo)) {
-                selectedRoom = room;
+        while (true) {
+            String selectedRoomNo = input.nextLine().trim();
+
+            // Enter = return
+            if (selectedRoomNo.isEmpty()) {
+                return;
+            }
+
+            // Select the Room by RoomNo.
+            for (int i = 0; i < availableRooms.size(); i++) {
+                Room room = availableRooms.get(i);
+                if (room.getRoomNo().equals(selectedRoomNo)) {
+                    selectedRoom = room;
+                    break;
+                }
+            }
+            // If Press Enter.. it will exit
+            if (selectedRoom != null) {
                 break;
             }
-        }
-        // If Press Enter.. it will exit
-        if (selectedRoom == null) {
-            System.out.println("Exit...");
-            return;
+            // Invalid room number
+            System.out.println("Invalid Room Number.");
+            System.out.print("Please enter a valid Room Number: ");
         }
         // Update Room Status
         selectedRoom.setOccupancyStatus("Occupied");
@@ -174,34 +218,105 @@ public class WIRegistrationControl {
             System.out.println("No occupied room.");
             return;
         }
-        System.out.print("\nEnter Room Number for Check Out: ");
-        String roomNo = input.nextLine();
+
+        System.out.print("\nEnter Room Number for Check Out (0 for Exit..): ");
+        String roomNo;
+        Booking selectedBooking = null;
+
+        while (true) {
+            roomNo = input.nextLine().trim();
+            if (roomNo.equals("0")) {
+                return;
+            }
+            for (int i = 0; i < book.size(); i++) {
+                Booking booking = book.get(i);
+
+                if (booking.getRoom().getRoomNo().equals(roomNo)
+                        && booking.getStatus().equals("Checked In")) {
+
+                    selectedBooking = booking;
+                    break;
+                }
+            }
+            if (selectedBooking != null) {
+                break;
+            }
+
+            // Invalid Room Number
+            System.out.println("Invalid Room Number.");
+            System.out.println("Please enter a Room Number that is currently Checked In.");
+            System.out.print("Enter Room Number for Check Out: ");
+        }
+        Booking booking = selectedBooking;
+        booking.setStatus("Checked Out");
+        Room room = booking.getRoom();
+        room.setCurrentStatus("Dirty");
+        room.updateOStatus();
+
+        System.out.println("\n========== Check Out Summary ==========");
+        System.out.println("Booking ID  : " + booking.getBookingID());
+        System.out.println("Guest Name  : " + booking.getGuest().getName());
+        System.out.println("Room No     : " + room.getRoomNo());
+        System.out.println("Room Type   : " + room.getRoomType());
+        System.out.println("Check In    : " + booking.getCheckInDate());
+        System.out.println("Check Out   : " + booking.getCheckOutDate());
+        System.out.println("Status      : " + booking.getStatus());
+        System.out.println("======================================");
+    }
+
+    // ======================================================================
+    // Report
+    // ======================================================================
+    public void SReport() {
+        System.out.println("\n============================== SUMMARY REPORT ==============================");
+
+        if (book.isEmpty()) {
+            System.out.println("No guest or booking records available.");
+            System.out.print("\nPress Enter to return...");
+            input.nextLine();
+            return;
+        }
+
+        System.out.printf(
+                "%-10s %-12s %-18s %-18s %-15s %-12s %-12s %-15s%n",
+                "Guest ID",
+                "Booking ID",
+                "Guest Name",
+                "IC / Passport",
+                "Phone Number",
+                "Room No",
+                "Room Type",
+                "Status");
+
+        System.out.println(
+                "-------------------------------------------------------------------------------------------------------------");
 
         for (int i = 0; i < book.size(); i++) {
             Booking booking = book.get(i);
+            Guest guest = booking.getGuest();
+            Room room = booking.getRoom();
 
-            if (booking.getRoom().getRoomNo().equals(roomNo)
-                    && booking.getStatus().equals("Checked In")) {
+            System.out.printf(
+                    "%-10s %-12s %-18s %-18s %-15s %-12s %-12s %-15s%n",
+                    guest.getGuestID(),
+                    booking.getBookingID(),
+                    guest.getName(),
+                    guest.getICPassportNo(),
+                    guest.getPhoneNumber(),
+                    room.getRoomNo(),
+                    room.getRoomType(),
+                    booking.getStatus());
 
-                booking.setStatus("Checked Out");
-                Room room = booking.getRoom();
+            System.out.printf(
+                    "    Check In Date : %-15s | Check Out Date : %-15s%n",
+                    booking.getCheckInDate(),
+                    booking.getCheckOutDate());
 
-                room.setOccupancyStatus("Available");
-                room.setCurrentStatus("Dirty");
-
-                System.out.println("\n========== Check Out Summary ==========");
-                System.out.println("Booking ID  : " + booking.getBookingID());
-                System.out.println("Guest Name  : " + booking.getGuest().getName());
-                System.out.println("Room No     : " + room.getRoomNo());
-                System.out.println("Room Type   : " + room.getRoomType());
-                System.out.println("Check In    : " + booking.getCheckInDate());
-                System.out.println("Check Out   : " + booking.getCheckOutDate());
-                System.out.println("Status      : " + booking.getStatus());
-                System.out.println("======================================");
-
-                found = true;
-                break;
-            }
+            System.out.println(
+                    "-------------------------------------------------------------------------------------------------------------");
         }
+
+        System.out.print("\nPress Enter to return...");
+        input.nextLine();
     }
 }

@@ -12,22 +12,32 @@ public class WIRegistrationUI {
     public WIRegistrationUI(RoomDAO roomDAO) {
         input = new Scanner(System.in);
         control = new WIRegistrationControl(roomDAO);
-}
+    }
 
     public void ShowMenu() {
-
         int choice;
 
         do {
-
             System.out.println("\n========== Walk-In Registration ==========");
             System.out.println("1. Register Customer");
             System.out.println("2. Check In");
             System.out.println("3. Check Out");
+            System.out.println("4. Summary Report");
             System.out.println("0. Back to Main Menu");
 
-            System.out.print("\nEnter your choice: ");
-            choice = input.nextInt();
+            while (true) {
+                System.out.print("\nEnter your choice: ");
+                String choiceInput = input.nextLine().trim();
+                try {
+                    choice = Integer.parseInt(choiceInput);
+                    if (choice >= 0 && choice <= 4) {
+                        break;
+                    }
+                    System.out.println("Invalid choice. Please enter 0, 1, 2, 3, or 4.");
+                } catch (NumberFormatException e) {
+                    System.out.println("Invalid input. Please enter numbers only.");
+                }
+            }
 
             switch (choice) {
 
@@ -44,7 +54,7 @@ public class WIRegistrationUI {
                     break;
 
                 case 4:
-                    //control.View Summary();
+                    control.SReport();
                     break;
 
                 case 0:

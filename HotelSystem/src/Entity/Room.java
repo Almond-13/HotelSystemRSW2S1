@@ -24,6 +24,13 @@ public class Room {
     public void setCGuest(Guest CGuest) {this.CGuest = CGuest;}
     public void setCurrentStatus(String currentStatus) { this.currentStatus = currentStatus; }
     public void setOccupancyStatus(String OccupancyStatus) { this.occupancyStatus = OccupancyStatus; }
+    public void updateOStatus() {
+        if (currentStatus.equals("Clean")) {
+            occupancyStatus = "Available";
+        } else {
+            occupancyStatus = "Unavailable";
+        }  
+    }
 
     public boolean isBookable() {
     return occupancyStatus.equals("Available")

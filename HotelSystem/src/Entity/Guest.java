@@ -5,6 +5,7 @@ public class Guest {
     private String Name;
     private String ICPassportNo;
     private String PhoneNumber;
+    //Add Guest Type(Normal/VIP)
 
     public Guest(){}
     public Guest(String GuestID,String Name, String ICPassportNo, String PhoneNumber){
