@@ -20,9 +20,10 @@ public class WIRegistrationUI {
         do {
             System.out.println("\n========== Walk-In Registration ==========");
             System.out.println("1. Register Customer");
-            System.out.println("2. Check In");
-            System.out.println("3. Check Out");
-            System.out.println("4. Summary Report");
+            System.out.println("2. Update Customer Information");
+            System.out.println("3. Check In");
+            System.out.println("4. Check Out");
+            System.out.println("5. Summary Report");
             System.out.println("0. Back to Main Menu");
 
             while (true) {
@@ -30,10 +31,10 @@ public class WIRegistrationUI {
                 String choiceInput = input.nextLine().trim();
                 try {
                     choice = Integer.parseInt(choiceInput);
-                    if (choice >= 0 && choice <= 4) {
+                    if (choice >= 0 && choice <= 5) {
                         break;
                     }
-                    System.out.println("Invalid choice. Please enter 0, 1, 2, 3, or 4.");
+                    System.out.println("Invalid choice. Please enter 0, 1, 2, 3, 4 or 5.");
                 } catch (NumberFormatException e) {
                     System.out.println("Invalid input. Please enter numbers only.");
                 }
@@ -46,14 +47,18 @@ public class WIRegistrationUI {
                     break;
 
                 case 2:
-                    control.CheckIn();
+                    control.UpdateGuestInfo();
                     break;
 
                 case 3:
-                    control.CheckOut();
+                    control.CheckIn();
                     break;
 
                 case 4:
+                    control.CheckOut();
+                    break;
+
+                case 5:
                     control.SReport();
                     break;
 
