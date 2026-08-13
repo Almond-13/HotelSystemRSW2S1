@@ -2,6 +2,7 @@ package boundary;
 
 import java.util.Scanner;
 import control.WIRegistrationControl;
+import control.HousekeepingManager;
 import dao.RoomDAO;
 
 public class WIRegistrationUI {
@@ -9,9 +10,9 @@ public class WIRegistrationUI {
     private Scanner input;
     private WIRegistrationControl control;
 
-    public WIRegistrationUI(RoomDAO roomDAO) {
-        input = new Scanner(System.in);
-        control = new WIRegistrationControl(roomDAO);
+    public WIRegistrationUI(RoomDAO roomDAO, HousekeepingManager hkManager) {
+    input = new Scanner(System.in);
+    control = new WIRegistrationControl(roomDAO, hkManager);
     }
 
     public void ShowMenu() {

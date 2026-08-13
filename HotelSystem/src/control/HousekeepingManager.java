@@ -96,11 +96,34 @@ public class HousekeepingManager {
         log.getRoom().setCurrentStatus(newStatus);
         return true;
     }
+    
+    public void recordCheckoutDirty(String roomNo, String staffId) {
+        HousekeepingLog log = findLog(roomNo);
+        if (log != null) {
+            log.getHistory().push(new StatusRecord("Dirty", staffId));
+            log.getRoom().setCurrentStatus("Dirty");
+        }
+    }
+    
+   public String getPreviousStatus(String roomNo) {
+        HousekeepingLog log = findLog(roomNo);
+        if (log == null || log.getHistory().size() <= 1) return null;
+        StatusRecord top = log.getHistory().pop();
+        StatusRecord previous = log.getHistory().peek();
+        log.getHistory().push(top);
+        return previous.getStatus();
+    }
 
     public boolean rollbackStatus(String roomNo) {
         HousekeepingLog log = findLog(roomNo);
         if (log == null) {
             lastError = "Room '" + roomNo + "' was not found in the system.";
+            return false;
+        }
+
+        String currentStatus = log.getRoom().getCurrentStatus();
+        if (currentStatus.equalsIgnoreCase("Dirty")) {
+            lastError = "Room '" + roomNo + "' is at 'Dirty' - the start of this cycle, nothing to roll back to.";
             return false;
         }
 
@@ -158,7 +181,7 @@ public class HousekeepingManager {
 
     // ---------- reports ----------
 
-    public void generateRoomStatusReport(String statusFilter) {
+    public void generateRoomStatusReport(String statusFilter, String typeFilter) {
         System.out.println("\n==================================================");
         System.out.println("           ROOM STATUS SUMMARY");
         System.out.println("==================================================");
@@ -167,7 +190,10 @@ public class HousekeepingManager {
         int fCount = 0;
         for (int i = 0; i < logCount; i++) {
             String status = logs[i].getRoom().getCurrentStatus();
-            if (statusFilter.equalsIgnoreCase("ALL") || status.equalsIgnoreCase(statusFilter)) {
+            String type = logs[i].getRoom().getRoomType();
+            boolean statusMatch = statusFilter.equalsIgnoreCase("ALL") || status.equalsIgnoreCase(statusFilter);
+            boolean typeMatch = typeFilter.equalsIgnoreCase("ALL") || type.equalsIgnoreCase(typeFilter);
+            if (statusMatch && typeMatch) {
                 filtered[fCount++] = logs[i];
             }
         }
@@ -185,7 +211,7 @@ public class HousekeepingManager {
         }
 
         if (fCount == 0) {
-            System.out.println("[i] No rooms match status '" + statusFilter + "'.");
+            System.out.println("[i] No rooms match status '" + statusFilter + "' and type '" + typeFilter + "'.");
             return;
         }
 

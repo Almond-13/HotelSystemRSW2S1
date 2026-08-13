@@ -21,8 +21,9 @@ public class WIRegistrationControl {
     private int bookingCount = 1;
     String bookingID = "B" + String.format("%03d", bookingCount++);
     private int guestCounter = 1;
+    private HousekeepingManager hkManager;
 
-    public WIRegistrationControl(RoomDAO roomDAO) {
+     public WIRegistrationControl(RoomDAO roomDAO, HousekeepingManager hkManager) {
         guestQueue = new CircularArrayQueue<>();
         input = new Scanner(System.in);
         rooms = roomDAO.getRooms();
@@ -31,6 +32,7 @@ public class WIRegistrationControl {
         guests = new ArrayList<>();
         guestDAO.loadGuests(guests);
         guestCounter = guests.size() + 1;
+        this.hkManager = hkManager;
     }
 
     // ===================================================================
@@ -476,7 +478,7 @@ public class WIRegistrationControl {
         Booking booking = selectedBooking;
         booking.setStatus("Checked Out");
         Room room = booking.getRoom();
-        room.setCurrentStatus("Dirty");
+        hkManager.recordCheckoutDirty(room.getRoomNo(), "Checkout");
         room.updateOStatus();
 
         System.out.println("\n========== Check Out Summary ==========");
