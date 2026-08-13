@@ -1,33 +1,34 @@
 // Author: Lim Jia Zheng
 package control;
 
+import adt.ArrayList;
 import adt.VipPriorityQueue;
+import dao.RoomDAO;
 import entity.GuestProfile;
 import entity.LoyaltyTier;
 import entity.Room;
-import entity.RoomStatus;
 import entity.RoomType;
 import entity.VipAllocationRequest;
 
 public class VipRoomAllocationControl {
-    private static final int MAX_ROOMS = 30;
     private static final int MAX_ALLOCATED = 50;
 
     private final VipPriorityQueue waitingQueue;
-    private final Room[] rooms;
+    private final RoomDAO roomDAO;
     private final VipAllocationRequest[] allocatedRequests;
-    private int roomCount;
     private int allocatedCount;
     private long nextArrivalSequence;
 
     public VipRoomAllocationControl() {
+        this(new RoomDAO());
+    }
+
+    public VipRoomAllocationControl(RoomDAO roomDAO) {
         waitingQueue = new VipPriorityQueue();
-        rooms = new Room[MAX_ROOMS];
+        this.roomDAO = roomDAO;
         allocatedRequests = new VipAllocationRequest[MAX_ALLOCATED];
-        roomCount = 0;
         allocatedCount = 0;
         nextArrivalSequence = 1;
-        seedRooms();
     }
 
     public VipAllocationRequest addVipRequest(String confirmationNumber, String guestName,
@@ -53,7 +54,7 @@ public class VipRoomAllocationControl {
         }
 
         request = waitingQueue.removeMax();
-        availableRoom.setRoomStatus(RoomStatus.OCCUPIED);
+        availableRoom.setOccupancyStatus("Occupied");
         request.setAllocatedRoom(availableRoom);
         allocatedRequests[allocatedCount++] = request;
         return request;
@@ -77,18 +78,19 @@ public class VipRoomAllocationControl {
     }
 
     public Room[] getReadyRoomsReport() {
+        ArrayList<Room> rooms = roomDAO.getRooms();
         int readyCount = 0;
-        for (int i = 0; i < roomCount; i++) {
-            if (rooms[i].getRoomStatus() == RoomStatus.READY) {
+        for (int i = 0; i < rooms.size(); i++) {
+            if (rooms.get(i).isBookable()) {
                 readyCount++;
             }
         }
 
         Room[] readyRooms = new Room[readyCount];
         int index = 0;
-        for (int i = 0; i < roomCount; i++) {
-            if (rooms[i].getRoomStatus() == RoomStatus.READY) {
-                readyRooms[index++] = rooms[i];
+        for (int i = 0; i < rooms.size(); i++) {
+            if (rooms.get(i).isBookable()) {
+                readyRooms[index++] = rooms.get(i);
             }
         }
         sortRoomsByTypeThenNumber(readyRooms);
@@ -99,32 +101,23 @@ public class VipRoomAllocationControl {
         return waitingQueue.getNumberOfEntries();
     }
 
-    private void seedRooms() {
-        addRoom(new Room("V101", RoomType.DELUXE, RoomStatus.READY));
-        addRoom(new Room("V102", RoomType.DELUXE, RoomStatus.READY));
-        addRoom(new Room("V201", RoomType.SUITE, RoomStatus.READY));
-        addRoom(new Room("V202", RoomType.SUITE, RoomStatus.CLEANING));
-        addRoom(new Room("V301", RoomType.EXECUTIVE, RoomStatus.READY));
-        addRoom(new Room("V401", RoomType.PRESIDENTIAL, RoomStatus.READY));
-    }
-
-    private void addRoom(Room room) {
-        rooms[roomCount++] = room;
-    }
-
     private Room findReadyRoom(RoomType preferredRoomType) {
-        for (int i = 0; i < roomCount; i++) {
-            if (rooms[i].getRoomStatus() == RoomStatus.READY && rooms[i].getRoomType() == preferredRoomType) {
-                return rooms[i];
+        ArrayList<Room> rooms = roomDAO.getRooms();
+        for (int i = 0; i < rooms.size(); i++) {
+            Room room = rooms.get(i);
+            if (room.isBookable() && room.getRoomType().equalsIgnoreCase(preferredRoomType.name())) {
+                return room;
             }
         }
         return null;
     }
 
     private Room findAnyReadyRoom() {
-        for (int i = 0; i < roomCount; i++) {
-            if (rooms[i].getRoomStatus() == RoomStatus.READY) {
-                return rooms[i];
+        ArrayList<Room> rooms = roomDAO.getRooms();
+        for (int i = 0; i < rooms.size(); i++) {
+            Room room = rooms.get(i);
+            if (room.isBookable()) {
+                return room;
             }
         }
         return null;
@@ -148,7 +141,7 @@ public class VipRoomAllocationControl {
         if (existingTier != currentTier) {
             return existingTier < currentTier;
         }
-        return existing.getAllocatedRoom().getRoomNumber().compareTo(current.getAllocatedRoom().getRoomNumber()) > 0;
+        return existing.getAllocatedRoom().getRoomNo().compareTo(current.getAllocatedRoom().getRoomNo()) > 0;
     }
 
     private void sortRoomsByTypeThenNumber(Room[] report) {
@@ -168,6 +161,6 @@ public class VipRoomAllocationControl {
         if (typeCompare != 0) {
             return typeCompare;
         }
-        return first.getRoomNumber().compareTo(second.getRoomNumber());
+        return first.getRoomNo().compareTo(second.getRoomNo());
     }
 }

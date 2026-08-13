@@ -47,7 +47,7 @@ public class VipAllocationRequest {
 
     @Override
     public String toString() {
-        String roomText = allocatedRoom == null ? "Waiting" : "Room " + allocatedRoom.getRoomNumber();
+        String roomText = allocatedRoom == null ? "Waiting" : "Room " + allocatedRoom.getRoomNo();
         return guestProfile + " | wants " + preferredRoomType + " | " + roomText;
     }
 }
