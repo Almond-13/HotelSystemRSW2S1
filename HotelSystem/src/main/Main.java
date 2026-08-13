@@ -4,14 +4,16 @@ import java.util.Scanner;
 
 import boundary.HousekeepingUI;
 import boundary.WIRegistrationUI;
+import control.HousekeepingManager;
 import dao.RoomDAO;
 
 public class Main {
     public static void main(String[] args) {
         Scanner input = new Scanner(System.in);
         RoomDAO roomDAO = new RoomDAO();
-        WIRegistrationUI WIRUI = new WIRegistrationUI(roomDAO);
-        HousekeepingUI HKUI = new HousekeepingUI(input, roomDAO);
+        HousekeepingManager hkManager = new HousekeepingManager(roomDAO.getRooms());
+        WIRegistrationUI WIRUI = new WIRegistrationUI(roomDAO, hkManager);
+        HousekeepingUI HKUI = new HousekeepingUI(input, hkManager);
 
         int choice;
         do {
