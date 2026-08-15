@@ -23,7 +23,7 @@ public class WIRegistrationControl {
     private int guestCounter = 1;
     private HousekeepingManager hkManager;
 
-     public WIRegistrationControl(RoomDAO roomDAO, HousekeepingManager hkManager) {
+    public WIRegistrationControl(RoomDAO roomDAO, HousekeepingManager hkManager) {
         guestQueue = new CircularArrayQueue<>();
         input = new Scanner(System.in);
         rooms = roomDAO.getRooms();
@@ -287,17 +287,31 @@ public class WIRegistrationControl {
         input.nextLine();
     }
 
-    // =====================================================================
-    // Check-In
-    // =====================================================================
-    public void CheckIn() {
-        System.out.println("\n===== Check In =====");
-        System.out.println("1. Show All Rooms");
+    // ========================================================================
+    // Assign Room
+    // ========================================================================
+    public void AssignRoom() {
+        System.out.println("\n============ Assign Room ============");
+
+        // Ask whether to show all rooms or bookable rooms only.
+        // Room status can always be checked here, even if no guest is
+        // currently waiting to be assigned.
+        System.out.println("\n1. Show All Rooms");
         System.out.println("2. Show Available Rooms Only");
         System.out.print("Enter your choice: ");
-
         String filterChoice = input.nextLine().trim();
-        // Show Room Status (with Filter)
+
+        // Build the list of rooms that can actually be assigned (bookable only),
+        // regardless of what the display filter shows.
+        ArrayList<Room> availableRooms = new ArrayList<>();
+        for (int i = 0; i < rooms.size(); i++) {
+            Room room = rooms.get(i);
+            if (room.isBookable()) {
+                availableRooms.add(room);
+            }
+        }
+
+        // Display Room Status (filtered display, single table)
         System.out.println("\n=================== Room Status ====================");
         System.out.printf("%-10s %-15s %-20s %-20s%n",
                 "Room No",
@@ -305,22 +319,14 @@ public class WIRegistrationControl {
                 "Current Status",
                 "Occupancy Status");
 
-        System.out.println("--------------------------------------------------------\n");
-        boolean found = false;
-        ArrayList<Room> availableRooms = new ArrayList<>();
+        System.out.println("--------------------------------------------------------");
 
         for (int i = 0; i < rooms.size(); i++) {
             Room room = rooms.get(i);
 
-            // Filter: only add to availableRooms list if bookable
-            if (room.isBookable()) {
-                availableRooms.add(room);
-                found = true;
-            }
-
-            // Filter: decide whether to print this row
+            // Filter "2" = Available Rooms Only: skip rooms that aren't bookable
             if (filterChoice.equals("2") && !room.isBookable()) {
-                continue; // skip non-available rooms when filter is "2"
+                continue;
             }
 
             System.out.printf("%-10s %-15s %-20s %-20s%n",
@@ -330,69 +336,96 @@ public class WIRegistrationControl {
                     room.getOccupancyStatus());
         }
 
-        if (!found) {
-            System.out.println("No Available Room Now.");
+        System.out.println("--------------------------------------------------------");
+
+        if (availableRooms.isEmpty()) {
+            System.out.println("\nNo available room for assignment.");
+            System.out.print("Press Enter to return...");
+            input.nextLine();
             return;
         }
 
+        // Now that the room table has been shown, check whether there is
+        // actually a guest waiting to be assigned a room. Viewing room
+        // status should not require a guest in the queue, but assigning
+        // one does.
         if (guestQueue.isEmpty()) {
-            System.out.println("No customer waiting for check in.");
+            System.out.println("\nNo guest waiting for room assignment.");
+            System.out.print("Press Enter to return...");
+            input.nextLine();
             return;
         }
-        // Guest Information
+
+        // Get the first guest in the waiting queue
         Guest guest = guestQueue.peek();
-        System.out.println("\nCurrent Guest:");
-        System.out.println(guest);
-        // Enter for Return to SubMenu
-        System.out.println("\nEnter your Room Number (Enter to return): ");
+
+        System.out.println("\n========== Guest Waiting ==========");
+        System.out.println("Guest ID       : " + guest.getGuestID());
+        System.out.println("Guest Name     : " + guest.getName());
+        System.out.println("IC / Passport  : " + guest.getICPassportNo());
+        System.out.println("Phone Number   : " + guest.getPhoneNumber());
+        System.out.println("===================================");
+
+        //Filter
         Room selectedRoom = null;
 
         while (true) {
-            String selectedRoomNo = input.nextLine().trim();
+            System.out.print("Enter Room Number (0 for Exit): ");
+            String roomNo = input.nextLine().trim();
 
-            // Enter = return
-            if (selectedRoomNo.isEmpty()) {
+            if (roomNo.equals("0")) {
                 return;
             }
 
-            // Select the Room by RoomNo.
             for (int i = 0; i < availableRooms.size(); i++) {
                 Room room = availableRooms.get(i);
-                if (room.getRoomNo().equals(selectedRoomNo)) {
+
+                if (room.getRoomNo().equals(roomNo)) {
                     selectedRoom = room;
                     break;
                 }
             }
-            // If Press Enter.. it will exit
+
             if (selectedRoom != null) {
                 break;
             }
-            // Invalid room number
+
             System.out.println("Invalid Room Number.");
-            System.out.print("Please enter a valid Room Number: ");
+            System.out.println("Please select an available room.");
         }
-        // Update Room Status
-        selectedRoom.setOccupancyStatus("Occupied");
-        selectedRoom.setCGuest(guest);
+
+        // Create Booking
         LocalDate checkInDate = LocalDate.now();
 
-        // Check Out
         int nights = 0;
+
         while (true) {
-            System.out.print("Enter number of nights: ");
+            System.out.print("Enter number of nights (0 to cancel): ");
             String nightsInput = input.nextLine().trim();
+
+            if (nightsInput.equals("0")) {
+                System.out.println("Assignment cancelled.");
+                return;
+            }
+
             try {
                 nights = Integer.parseInt(nightsInput);
+
                 if (nights > 0) {
                     break;
                 }
+
                 System.out.println("Number of nights must be at least 1.");
+
             } catch (NumberFormatException e) {
                 System.out.println("Invalid input. Please enter a number.");
             }
         }
+
         LocalDate checkOutDate = checkInDate.plusDays(nights);
+
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
         String checkInStr = checkInDate.format(formatter);
         String checkOutStr = checkOutDate.format(formatter);
 
@@ -402,23 +435,154 @@ public class WIRegistrationControl {
                 selectedRoom,
                 checkInStr,
                 checkOutStr,
-                "Checked In");
-        book.add(booking);
-        System.out.println(
-                "Check In Successful!");
-        System.out.println(
-                "Booking ID: " + bookingID);
+                "Assigned");
 
-        // Remove guest from queue after successful check in
+        book.add(booking);
+
+        // Room is now reserved for this guest but NOT occupied yet.
+        // occupancyStatus turns "Unavailable" here on purpose, so no one
+        // else can grab the same room before the guest actually checks in.
+        selectedRoom.setOccupancyStatus("Unavailable");
+
+        // Remove guest from waiting queue
         guestQueue.dequeue();
-        System.out.println("\n========== Check In Summary ==========");
+
+        System.out.println("\nRoom assigned successfully!");
+        System.out.println("\n========== Assignment Summary ==========");
         System.out.println("Booking ID   : " + bookingID);
+        System.out.println("Guest ID     : " + guest.getGuestID());
         System.out.println("Guest Name   : " + guest.getName());
-        System.out.println("IC/Passport  : " + guest.getICPassportNo());
         System.out.println("Room No      : " + selectedRoom.getRoomNo());
         System.out.println("Room Type    : " + selectedRoom.getRoomType());
         System.out.println("Check In     : " + booking.getCheckInDate());
+        System.out.println("Check Out    : " + booking.getCheckOutDate());
         System.out.println("Status       : " + booking.getStatus());
+        System.out.println("========================================");
+
+        // Generate next Booking ID
+        bookingID = "B" + String.format("%03d", bookingCount++);
+    }
+
+    // ========================================================================
+    // Check-In
+    // ========================================================================
+    public void CheckIn() {
+        System.out.println("\n============ Check In ============");
+
+        boolean found = false;
+
+        // Display all assigned bookings
+        System.out.printf("%-12s %-12s %-20s %-12s %-15s%n",
+                "Booking ID",
+                "Guest ID",
+                "Guest Name",
+                "Room No",
+                "Status");
+
+        System.out.println("----------------------------------------------------------------");
+
+        for (int i = 0; i < book.size(); i++) {
+            Booking booking = book.get(i);
+
+            if (booking.getStatus().equals("Assigned")) {
+
+                System.out.printf("%-12s %-12s %-20s %-12s %-15s%n",
+                        booking.getBookingID(),
+                        booking.getGuest().getGuestID(),
+                        booking.getGuest().getName(),
+                        booking.getRoom().getRoomNo(),
+                        booking.getStatus());
+
+                found = true;
+            }
+        }
+
+        if (!found) {
+            System.out.println("No assigned guest available for check-in.");
+            System.out.print("\nPress Enter to return...");
+            input.nextLine();
+            return;
+        }
+
+        // Search Guest ID
+        Booking selectedBooking = null;
+
+        while (true) {
+            System.out.print("\nEnter Guest ID for Check In (0 for Exit): ");
+            String guestID = input.nextLine().trim();
+
+            if (guestID.equals("0")) {
+                return;
+            }
+
+            for (int i = 0; i < book.size(); i++) {
+                Booking booking = book.get(i);
+
+                if (booking.getGuest().getGuestID().equalsIgnoreCase(guestID)
+                        && booking.getStatus().equals("Assigned")) {
+
+                    selectedBooking = booking;
+                    break;
+                }
+            }
+
+            if (selectedBooking != null) {
+                break;
+            }
+
+            System.out.println("No assigned booking found for this Guest ID.");
+        }
+
+        Guest guest = selectedBooking.getGuest();
+        Room room = selectedBooking.getRoom();
+
+        // Check whether the room is available for check-in
+        if (!room.getCurrentStatus().equals("Clean")) {
+            System.out.println("\nThe assigned room is not ready for check-in yet.");
+            System.out.println("Room Status : " + room.getCurrentStatus());
+
+            System.out.print("\nPress Enter to return...");
+            input.nextLine();
+            return;
+        }
+
+        // Confirm Check-In
+        System.out.println("\n========== Guest Information ==========");
+        System.out.println("Guest ID       : " + guest.getGuestID());
+        System.out.println("Guest Name     : " + guest.getName());
+        System.out.println("IC / Passport  : " + guest.getICPassportNo());
+        System.out.println("Phone Number   : " + guest.getPhoneNumber());
+        System.out.println("Room No        : " + room.getRoomNo());
+        System.out.println("Room Type      : " + room.getRoomType());
+        System.out.println("Check In       : " + selectedBooking.getCheckInDate());
+        System.out.println("Check Out      : " + selectedBooking.getCheckOutDate());
+        System.out.println("=======================================");
+
+        System.out.print("\nConfirm Check In? (Y/N): ");
+        String confirm = input.nextLine().trim();
+
+        if (!confirm.equalsIgnoreCase("Y")) {
+            System.out.println("Check In cancelled.");
+            return;
+        }
+
+        // Update Booking Status
+        selectedBooking.setStatus("Checked In");
+
+        // Room stays "Unavailable" (it is occupied now, not free to assign),
+        // so no further occupancyStatus change is needed here.
+
+        System.out.println("\nCheck In Successful!");
+
+        System.out.println("\n========== Check In Summary ==========");
+        System.out.println("Booking ID   : " + selectedBooking.getBookingID());
+        System.out.println("Guest ID     : " + guest.getGuestID());
+        System.out.println("Guest Name   : " + guest.getName());
+        System.out.println("Room No      : " + room.getRoomNo());
+        System.out.println("Room Type    : " + room.getRoomType());
+        System.out.println("Check In     : " + selectedBooking.getCheckInDate());
+        System.out.println("Check Out    : " + selectedBooking.getCheckOutDate());
+        System.out.println("Status       : " + selectedBooking.getStatus());
         System.out.println("======================================");
     }
 
@@ -427,69 +591,99 @@ public class WIRegistrationControl {
     // ========================================================================
     public void CheckOut() {
         System.out.println("\n============ Check Out ============");
+
         boolean found = false;
+
+        System.out.printf("%-12s %-20s %-12s %-15s %-15s%n",
+                "Booking ID",
+                "Guest Name",
+                "Room No",
+                "Check In",
+                "Check Out");
+
+        System.out.println("--------------------------------------------------------------------------");
+
         for (int i = 0; i < book.size(); i++) {
             Booking booking = book.get(i);
 
-            // Output all the detail of Room that were Booked
             if (booking.getStatus().equals("Checked In")) {
-                System.out.printf(
-                        "%-10s %-15s %-15s %-15s%n",
-                        booking.getRoom().getRoomNo(),
+
+                System.out.printf("%-12s %-20s %-12s %-15s %-15s%n",
+                        booking.getBookingID(),
                         booking.getGuest().getName(),
+                        booking.getRoom().getRoomNo(),
                         booking.getCheckInDate(),
                         booking.getCheckOutDate());
+
                 found = true;
             }
         }
+
         if (!found) {
             System.out.println("No occupied room.");
+            System.out.print("\nPress Enter to return...");
+            input.nextLine();
             return;
         }
 
-        System.out.print("\nEnter Room Number for Check Out (0 for Exit..): ");
-        String roomNo;
+        // whichever one they have on hand.
         Booking selectedBooking = null;
 
         while (true) {
-            roomNo = input.nextLine().trim();
-            if (roomNo.equals("0")) {
+            System.out.print("\nEnter Room Number for Check Out (0 for Exit): ");
+            String keyword = input.nextLine().trim();
+
+            if (keyword.equals("0")) {
                 return;
             }
+
             for (int i = 0; i < book.size(); i++) {
                 Booking booking = book.get(i);
 
-                if (booking.getRoom().getRoomNo().equals(roomNo)
-                        && booking.getStatus().equals("Checked In")) {
+                if (booking.getStatus().equals("Checked In")
+                        && (booking.getRoom().getRoomNo().equalsIgnoreCase(keyword))) {
 
                     selectedBooking = booking;
                     break;
                 }
             }
+
             if (selectedBooking != null) {
                 break;
             }
 
-            // Invalid Room Number
             System.out.println("Invalid Room Number.");
-            System.out.println("Please enter a Room Number that is currently Checked In.");
-            System.out.print("Enter Room Number for Check Out: ");
+            System.out.println(
+                    "Please enter a Room Number that is currently Checked In.");
         }
-        Booking booking = selectedBooking;
-        booking.setStatus("Checked Out");
-        Room room = booking.getRoom();
-        hkManager.recordCheckoutDirty(room.getRoomNo(), "Checkout");
+
+        // Update Booking Status
+        selectedBooking.setStatus("Checked Out");
+
+        // Get Room
+        Room room = selectedBooking.getRoom();
+
+        // Send room to Housekeeping
+        hkManager.recordCheckoutDirty(
+                room.getRoomNo(),
+                "Checkout");
+
+        // Recompute occupancyStatus from the (now dirty) currentStatus
         room.updateOStatus();
 
         System.out.println("\n========== Check Out Summary ==========");
-        System.out.println("Booking ID  : " + booking.getBookingID());
-        System.out.println("Guest Name  : " + booking.getGuest().getName());
+        System.out.println("Booking ID  : " + selectedBooking.getBookingID());
+        System.out.println("Guest ID    : "
+                + selectedBooking.getGuest().getGuestID());
+        System.out.println("Guest Name  : "
+                + selectedBooking.getGuest().getName());
         System.out.println("Room No     : " + room.getRoomNo());
         System.out.println("Room Type   : " + room.getRoomType());
-        System.out.println("Check In    : " + booking.getCheckInDate());
-        System.out.println("Check Out   : " + booking.getCheckOutDate());
-        System.out.println("Status      : " + booking.getStatus());
-        System.out.println("======================================");
+        System.out.println("Check In    : " + selectedBooking.getCheckInDate());
+        System.out.println("Check Out   : " + selectedBooking.getCheckOutDate());
+        System.out.println("Status      : " + selectedBooking.getStatus());
+        System.out.println("Room Status : " + room.getCurrentStatus());
+        System.out.println("=======================================");
     }
 
     // ======================================================================
