@@ -22,10 +22,11 @@ public class WIRegistrationUI {
             System.out.println("\n========== Walk-In Registration ==========");
             System.out.println("1. Register Customer");
             System.out.println("2. Update Customer Information");
-            System.out.println("3. Assign Room");
-            System.out.println("4. Check In");
-            System.out.println("5. Check Out");
-            System.out.println("6. Summary Report");
+            System.out.println("3. Delete Customer");
+            System.out.println("4. Assign Room");
+            System.out.println("5. Check In");
+            System.out.println("6. Check Out");
+            System.out.println("7. Summary Report");
             System.out.println("0. Back to Main Menu");
 
             while (true) {
@@ -33,7 +34,7 @@ public class WIRegistrationUI {
                 String choiceInput = input.nextLine().trim();
                 try {
                     choice = Integer.parseInt(choiceInput);
-                    if (choice >= 0 && choice <= 6) {
+                    if (choice >= 0 && choice <= 7) {
                         break;
                     }
                     System.out.println("Invalid choice. Please enter 0, 1, 2, 3, 4 or 5.");
@@ -53,18 +54,22 @@ public class WIRegistrationUI {
                     break;
 
                 case 3:
-                    control.AssignRoom();
+                    control.CancelGuest();
                     break;
 
                 case 4:
-                    control.CheckIn();
+                    control.AssignRoom();
                     break;
 
                 case 5:
-                    control.CheckOut();
+                    control.CheckIn();
                     break;
 
                 case 6:
+                    control.CheckOut();
+                    break;
+
+                case 7:
                     control.SReport();
                     break;
 
