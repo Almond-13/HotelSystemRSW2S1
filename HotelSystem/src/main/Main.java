@@ -3,6 +3,7 @@ package main;
 import java.util.Scanner;
 
 import boundary.HousekeepingUI;
+import boundary.LoyaltyRewardsUI;
 import boundary.WIRegistrationUI;
 import dao.RoomDAO;
 
@@ -49,7 +50,9 @@ public class Main {
                     HKUI.run();
                     break;
                 case 4:
-                    // VIP
+                    LoyaltyRewardsUI loyaltyUI = new LoyaltyRewardsUI();
+                    loyaltyUI.showMenu();
+                    break;
                 case 0:
                     System.out.println("Exit System...");
                     break;

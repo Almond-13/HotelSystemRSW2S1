@@ -11,6 +11,7 @@ public class WIRegistrationControl {
     private CircularArrayQueue<Guest> guestQueue;
     private ArrayList<Booking> book;
     private Scanner input;
+    private String lastError;
 
     // For Booking Part
     private int bookingCount = 1;
@@ -22,6 +23,19 @@ public class WIRegistrationControl {
         input = new Scanner(System.in);
         rooms = roomDAO.getRooms();
         book = new ArrayList<>();
+        lastError = "";
+    }
+
+    public String getLastError() {
+        return lastError;
+    }
+
+    private void setError(String message) {
+        this.lastError = message;
+    }
+
+    private void clearError() {
+        this.lastError = "";
     }
 
     // ===================================================================
