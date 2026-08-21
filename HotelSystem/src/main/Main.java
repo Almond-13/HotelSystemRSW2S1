@@ -25,7 +25,7 @@ public class Main {
             System.out.println("4. Loyalty and Rewards");
             System.out.println("0. Exit");
 
-            //Validation of Main Menu Choice
+            // Validation of Main Menu Choice
             while (true) {
                 System.out.print("\nEnter Your Choice (0 for Exit): ");
                 String inputChoice = input.nextLine().trim();
@@ -52,7 +52,7 @@ public class Main {
                     HKUI.run();
                     break;
                 case 4:
-                    LoyaltyRewardsUI loyaltyUI = new LoyaltyRewardsUI();
+                    LoyaltyRewardsUI loyaltyUI = new LoyaltyRewardsUI(input);
                     loyaltyUI.showMenu();
                     break;
                 case 0:

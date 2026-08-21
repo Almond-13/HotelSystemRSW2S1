@@ -11,8 +11,8 @@ public class LoyaltyRewardsUI {
     private Scanner input;
     private LoyaltyRewardsControl control;
 
-    public LoyaltyRewardsUI() {
-        input = new Scanner(System.in);
+    public LoyaltyRewardsUI(Scanner input) {
+        this.input = input;
         control = new LoyaltyRewardsControl();
     }
 

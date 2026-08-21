@@ -30,6 +30,9 @@ public class WIRegistrationControl {
         // guestDAO = new GuestDAO();
         book = new ArrayList<>();
         lastError = "";
+        guests = new ArrayList<>();
+        guestCounter = guests.size() + 1;
+        this.hkManager = hkManager;
     }
 
     public String getLastError() {
@@ -42,10 +45,6 @@ public class WIRegistrationControl {
 
     private void clearError() {
         this.lastError = "";
-        guests = new ArrayList<>();
-        // guestDAO.loadGuests(guests);
-        guestCounter = guests.size() + 1;
-        this.hkManager = hkManager;
     }
 
     // ===================================================================
