@@ -15,7 +15,9 @@ public class WIRegistrationControl {
     private ArrayList<Room> rooms; // Call Fixed Data (which is Room No and Room Type)
     private ArrayList<Guest> guests;
     private Scanner input;
-    // For Booking Part (Booking ID)
+    private String lastError;
+
+    // For Booking Part
     private int bookingCount = 1;
     String bookingID = "B" + String.format("%03d", bookingCount++);
     private int guestCounter = 1;
@@ -27,6 +29,19 @@ public class WIRegistrationControl {
         rooms = roomDAO.getRooms();
         // guestDAO = new GuestDAO();
         book = new ArrayList<>();
+        lastError = "";
+    }
+
+    public String getLastError() {
+        return lastError;
+    }
+
+    private void setError(String message) {
+        this.lastError = message;
+    }
+
+    private void clearError() {
+        this.lastError = "";
         guests = new ArrayList<>();
         // guestDAO.loadGuests(guests);
         guestCounter = guests.size() + 1;
