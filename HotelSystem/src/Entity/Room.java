@@ -5,22 +5,19 @@ public class Room {
     private String roomType;
     private String currentStatus;
     private String occupancyStatus;
-    private Guest currentGuest;
 
     public Room() {
         this.roomNo = "";
         this.roomType = "";
         this.currentStatus = "Clean";
-        this.occupancyStatus = "Vacant";
-        this.currentGuest = null;
+        this.occupancyStatus = "Available";
     }
 
     public Room(String roomNo, String roomType) {
         this.roomNo = roomNo;
         this.roomType = roomType;
         this.currentStatus = "Clean";
-        this.occupancyStatus = "Vacant";
-        this.currentGuest = null;
+        this.occupancyStatus = "Available";
     }
 
     public String getRoomNo() {
@@ -55,24 +52,19 @@ public class Room {
         this.occupancyStatus = occupancyStatus;
     }
 
-    public Guest getCurrentGuest() {
-        return currentGuest;
-    }
-
-    public void setCGuest(Guest guest) {
-        this.currentGuest = guest;
-    }
-
     public boolean isBookable() {
-        return occupancyStatus.equals("Vacant") && currentStatus.equals("Clean");
+        return occupancyStatus.equals("Available") && currentStatus.equals("Clean");
     }
 
     public void updateOStatus() {
-        if (occupancyStatus.equals("Occupied")) {
-            currentStatus = "Occupied";
-        } else if (currentStatus.equals("Dirty")) {
-            currentStatus = "Dirty";
-        }
+    if (occupancyStatus.equals("Occupied")) {
+        return;
+    }
+    if (currentStatus.equals("Clean")) {
+        occupancyStatus = "Available";
+    } else {
+        occupancyStatus = "Unavailable";
+    }
     }
 
     @Override
