@@ -1,0 +1,14 @@
+101|Standard
+102|Standard
+103|Standard
+104|Standard
+105|Standard
+201|Deluxe
+202|Deluxe
+203|Deluxe
+204|Deluxe
+301|Suite
+302|Suite
+303|Suite
+304|Suite
+305|Suite
