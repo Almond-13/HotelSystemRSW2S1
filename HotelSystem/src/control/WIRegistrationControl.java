@@ -48,9 +48,6 @@ public class WIRegistrationControl {
     public void RGuest() {
 
         System.out.println("\n===== Register Guest =====");
-
-        // Generate Guest ID
-
         // Guest Name
         String name;
 
@@ -66,6 +63,7 @@ public class WIRegistrationControl {
                 break;
             }
         }
+        // Generate Guest ID
         String guestID = String.format("G%03d", guestCounter++);
 
         // IC / Passport
@@ -228,10 +226,8 @@ public class WIRegistrationControl {
         System.out.println("\n========== Current Guest Information ==========");
         System.out.println("Guest ID       : " + selectedGuest.getGuestID());
         System.out.println("Guest Name     : " + selectedGuest.getName());
-        System.out.println("IC / Passport  : "
-                + selectedGuest.getICPassportNo());
-        System.out.println("Phone Number   : "
-                + selectedGuest.getPhoneNumber());
+        System.out.println("IC / Passport  : " + selectedGuest.getICPassportNo());
+        System.out.println("Phone Number   : "+ selectedGuest.getPhoneNumber());
         System.out.println("===============================================");
 
         // Update Name
