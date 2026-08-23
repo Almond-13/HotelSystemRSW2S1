@@ -3,6 +3,7 @@ package main;
 import java.util.Scanner;
 
 import boundary.HousekeepingUI;
+import boundary.VIPUI;
 import boundary.WIRegistrationUI;
 import dao.RoomDAO;
 
@@ -11,6 +12,7 @@ public class Main {
         Scanner input = new Scanner(System.in);
         RoomDAO roomDAO = new RoomDAO();
         WIRegistrationUI WIRUI = new WIRegistrationUI(roomDAO);
+        VIPUI VIPUI = new VIPUI(input, roomDAO);
         HousekeepingUI HKUI = new HousekeepingUI(input, roomDAO);
 
         int choice;
@@ -44,12 +46,14 @@ public class Main {
                     WIRUI.ShowMenu();
                     break;
                 case 2:
-                    // VIP
+                    VIPUI.run();
+                    break;
                 case 3:
                     HKUI.run();
                     break;
                 case 4:
-                    // VIP
+                    System.out.println("Loyalty and Rewards module is not available yet.");
+                    break;
                 case 0:
                     System.out.println("Exit System...");
                     break;
