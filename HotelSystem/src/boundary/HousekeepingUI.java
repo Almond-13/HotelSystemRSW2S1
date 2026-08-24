@@ -30,11 +30,9 @@ public class HousekeepingUI {
                 case 1:
                     viewAllFlow();
                     break;
-                case 2:
-                    System.out.print("\nEnter status to filter (ALL, Dirty, Cleaning In Progress, Inspected, Clean): ");
-                    String statusFilter = sc.nextLine().trim();
-                    System.out.print("Enter room type to filter (ALL, Standard, Deluxe, Suite): ");
-                    String typeFilter = sc.nextLine().trim();
+                  case 2:
+                    String statusFilter = readValidValue("\nEnter status to filter: ", HousekeepingManager.getValidStatuses());
+                    String typeFilter = readValidValue("Enter room type to filter: ", manager.getDistinctRoomTypes());
                     System.out.println();
                     manager.generateRoomStatusReport(statusFilter, typeFilter);
                     pauseForUser();
@@ -242,6 +240,27 @@ public class HousekeepingUI {
                 continue;
             }
             return roomNo;
+        }
+    }
+    
+    private String readValidValue(String prompt, String[] validValues) {
+        while (true) {
+            System.out.print(prompt);
+            String value = sc.nextLine().trim();
+            if (value.equalsIgnoreCase("ALL")) {
+                return value;
+            }
+            for (String valid : validValues) {
+                if (valid.equalsIgnoreCase(value)) {
+                    return value;
+                }
+            }
+            System.out.print("[!] Invalid value. Valid options: ALL, ");
+            for (int i = 0; i < validValues.length; i++) {
+                System.out.print(validValues[i]);
+                if (i < validValues.length - 1) System.out.print(", ");
+            }
+            System.out.println();
         }
     }
 }
