@@ -1,3 +1,4 @@
+//Author : Lee Wei Zhong
 package control;
 
 import entity.Room;
@@ -22,30 +23,7 @@ public class HousekeepingManager {
         lastError = "";
     }
 
-    public String getLastError() { return lastError; }
-
-    private void ensureCapacity() {
-        if (logCount == logs.length) {
-            HousekeepingLog[] bigger = new HousekeepingLog[logs.length * 2];
-            for (int i = 0; i < logs.length; i++) bigger[i] = logs[i];
-            logs = bigger;
-        }
-    }
-
-    private int indexOfStatus(String status) {
-        for (int i = 0; i < SEQUENCE.length; i++) {
-            if (SEQUENCE[i].equalsIgnoreCase(status)) return i;
-        }
-        return -1;
-    }
-
-    private HousekeepingLog findLog(String roomNo) {
-        for (int i = 0; i < logCount; i++) {
-            if (logs[i].getRoom().getRoomNo().equalsIgnoreCase(roomNo)) return logs[i];
-        }
-        return null;
-    }
-    
+    // Build Logs From Shared Room List (RoomDAO)
     public HousekeepingManager(ArrayList<Room> rooms) {
         logs = new HousekeepingLog[10];
         logCount = 0;
@@ -54,6 +32,34 @@ public class HousekeepingManager {
             registerRoom(rooms.get(i));
         }
     }
+
+    public String getLastError() { return lastError; }
+
+    // Ensure Log Capacity
+    private void ensureCapacity() {
+        if (logCount == logs.length) {
+            HousekeepingLog[] bigger = new HousekeepingLog[logs.length * 2];
+            for (int i = 0; i < logs.length; i++) bigger[i] = logs[i];
+            logs = bigger;
+        }
+    }
+
+    // Get Index Of Status In Sequence
+    private int indexOfStatus(String status) {
+        for (int i = 0; i < SEQUENCE.length; i++) {
+            if (SEQUENCE[i].equalsIgnoreCase(status)) return i;
+        }
+        return -1;
+    }
+
+    // Find Room's Housekeeping Log
+    private HousekeepingLog findLog(String roomNo) {
+        for (int i = 0; i < logCount; i++) {
+            if (logs[i].getRoom().getRoomNo().equalsIgnoreCase(roomNo)) return logs[i];
+        }
+        return null;
+    }
+
     public boolean roomExists(String roomNo) { return findLog(roomNo) != null; }
 
     public String getCurrentStatus(String roomNo) {
@@ -61,6 +67,7 @@ public class HousekeepingManager {
         return (log == null) ? null : log.getRoom().getCurrentStatus();
     }
 
+    // Get Next Status In Sequence (null if already at final stage)
     public String getNextStatus(String roomNo) {
         HousekeepingLog log = findLog(roomNo);
         if (log == null) return null;
@@ -71,11 +78,13 @@ public class HousekeepingManager {
 
     public static String[] getValidStatuses() { return SEQUENCE.clone(); }
 
+    // Register Room Into Housekeeping Log
     public void registerRoom(Room room) {
         ensureCapacity();
         logs[logCount++] = new HousekeepingLog(room);
     }
 
+    // Update Room Status
     public boolean updateStatus(String roomNo, String newStatus, String staffId) {
         HousekeepingLog log = findLog(roomNo);
         if (log == null) {
@@ -83,6 +92,7 @@ public class HousekeepingManager {
             return false;
         }
 
+        // Validate New Status Follows Current Status In Sequence
         String currentStatus = log.getRoom().getCurrentStatus();
         int currentIndex = indexOfStatus(currentStatus);
         int newIndex = indexOfStatus(newStatus);
@@ -92,11 +102,13 @@ public class HousekeepingManager {
             return false;
         }
 
+        // Push New Status Onto History And Update Room
         log.getHistory().push(new StatusRecord(newStatus, staffId));
         log.getRoom().setCurrentStatus(newStatus);
         return true;
     }
-    
+
+    // Record Checkout (Room Becomes Dirty For New Cleaning Cycle)
     public void recordCheckoutDirty(String roomNo, String staffId) {
         HousekeepingLog log = findLog(roomNo);
         if (log != null) {
@@ -104,8 +116,9 @@ public class HousekeepingManager {
             log.getRoom().setCurrentStatus("Dirty");
         }
     }
-    
-   public String getPreviousStatus(String roomNo) {
+
+    // Preview Previous Status Without Modifying History
+    public String getPreviousStatus(String roomNo) {
         HousekeepingLog log = findLog(roomNo);
         if (log == null || log.getHistory().size() <= 1) return null;
         StatusRecord top = log.getHistory().pop();
@@ -114,6 +127,7 @@ public class HousekeepingManager {
         return previous.getStatus();
     }
 
+    // Rollback Status
     public boolean rollbackStatus(String roomNo) {
         HousekeepingLog log = findLog(roomNo);
         if (log == null) {
@@ -121,6 +135,7 @@ public class HousekeepingManager {
             return false;
         }
 
+        // Block Rollback At Dirty (Start Of Cycle, Nothing Earlier To Restore)
         String currentStatus = log.getRoom().getCurrentStatus();
         if (currentStatus.equalsIgnoreCase("Dirty")) {
             lastError = "Room '" + roomNo + "' is at 'Dirty' - the start of this cycle, nothing to roll back to.";
@@ -132,31 +147,34 @@ public class HousekeepingManager {
             return false;
         }
 
+        // Pop Current Status And Restore Previous One
         log.getHistory().pop();
         StatusRecord previous = log.getHistory().peek();
         log.getRoom().setCurrentStatus(previous.getStatus());
         log.incrementRollbackCount();
         return true;
     }
-    
+
+    // Manually Start New Cleaning Cycle (Testing / Standalone Use)
     public boolean startNewCycle(String roomNo, String staffId) {
-    HousekeepingLog log = findLog(roomNo);
-    if (log == null) {
-        lastError = "Room '" + roomNo + "' was not found in the system.";
-        return false;
+        HousekeepingLog log = findLog(roomNo);
+        if (log == null) {
+            lastError = "Room '" + roomNo + "' was not found in the system.";
+            return false;
+        }
+
+        String currentStatus = log.getRoom().getCurrentStatus();
+        if (!currentStatus.equalsIgnoreCase("Clean")) {
+            lastError = "Room '" + roomNo + "' must be 'Clean' before starting a new cycle (currently '" + currentStatus + "').";
+            return false;
+        }
+
+        log.getHistory().push(new StatusRecord("Dirty", staffId));
+        log.getRoom().setCurrentStatus("Dirty");
+        return true;
     }
 
-    String currentStatus = log.getRoom().getCurrentStatus();
-    if (!currentStatus.equalsIgnoreCase("Clean")) {
-        lastError = "Room '" + roomNo + "' must be 'Clean' before starting a new cycle (currently '" + currentStatus + "').";
-        return false;
-    }
-
-    log.getHistory().push(new StatusRecord("Dirty", staffId));
-    log.getRoom().setCurrentStatus("Dirty");
-    return true;
-}
-    
+    // Print Room Status History (Most Recent First, Non-Destructive)
     public boolean printHistory(String roomNo) {
         HousekeepingLog log = findLog(roomNo);
         if (log == null) {
@@ -168,6 +186,7 @@ public class HousekeepingManager {
         LinkedStack<StatusRecord> original = log.getHistory();
         LinkedStack<StatusRecord> temp = new LinkedStack<>();
 
+        // Pop Into Temp Stack To Print, Then Restore Original Order
         while (!original.isEmpty()) {
             StatusRecord r = original.pop();
             System.out.println("  " + r);
@@ -179,13 +198,13 @@ public class HousekeepingManager {
         return true;
     }
 
-    // ---------- reports ----------
-
+    // Report: Room Status Summary (Filtered By Status And Room Type)
     public void generateRoomStatusReport(String statusFilter, String typeFilter) {
         System.out.println("\n==================================================");
         System.out.println("           ROOM STATUS SUMMARY");
         System.out.println("==================================================");
 
+        // Search: Filter Rooms Matching Status AND Room Type
         HousekeepingLog[] filtered = new HousekeepingLog[logCount];
         int fCount = 0;
         for (int i = 0; i < logCount; i++) {
@@ -198,7 +217,7 @@ public class HousekeepingManager {
             }
         }
 
-        // insertion sort by room number (ascending)
+        // Sort: Insertion Sort By Room Number (Ascending)
         for (int i = 1; i < fCount; i++) {
             HousekeepingLog key = filtered[i];
             String keyRoom = key.getRoom().getRoomNo();
@@ -215,6 +234,7 @@ public class HousekeepingManager {
             return;
         }
 
+        // Print Report Table
         System.out.printf("%-4s %-8s %-10s %-22s%n", "No.", "Room", "Type", "Status");
         System.out.println("--------------------------------------------------");
         for (int i = 0; i < fCount; i++) {
@@ -225,11 +245,35 @@ public class HousekeepingManager {
         System.out.println("Total: " + fCount + " room(s)");
     }
 
+    // Get Distinct Room Types (For Validating Report Filter Input)
+    public String[] getDistinctRoomTypes() {
+        String[] types = new String[logCount];
+        int count = 0;
+        for (int i = 0; i < logCount; i++) {
+            String type = logs[i].getRoom().getRoomType();
+            boolean found = false;
+            for (int j = 0; j < count; j++) {
+                if (types[j].equalsIgnoreCase(type)) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                types[count++] = type;
+            }
+        }
+        String[] result = new String[count];
+        for (int i = 0; i < count; i++) result[i] = types[i];
+        return result;
+    }
+
+    // Report: Rollback Frequency
     public void generateRollbackFrequencyReport() {
         System.out.println("\n==================================================");
         System.out.println("           ROLLBACK FREQUENCY REPORT");
         System.out.println("==================================================");
 
+        // Search: Filter Rooms With At Least One Rollback
         HousekeepingLog[] filtered = new HousekeepingLog[logCount];
         int fCount = 0;
         for (int i = 0; i < logCount; i++) {
@@ -238,7 +282,7 @@ public class HousekeepingManager {
             }
         }
 
-        // insertion sort by rollbackCount descending
+        // Sort: Insertion Sort By Rollback Count (Descending)
         for (int i = 1; i < fCount; i++) {
             HousekeepingLog key = filtered[i];
             int keyCount = key.getRollbackCount();
@@ -255,6 +299,7 @@ public class HousekeepingManager {
             return;
         }
 
+        // Print Report Table
         System.out.printf("%-6s %-8s %-10s%n", "Rank", "Room", "Rollbacks");
         System.out.println("--------------------------------------------------");
         for (int i = 0; i < fCount; i++) {
