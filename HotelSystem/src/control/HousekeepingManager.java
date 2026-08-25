@@ -105,6 +105,7 @@ public class HousekeepingManager {
         // Push New Status Onto History And Update Room
         log.getHistory().push(new StatusRecord(newStatus, staffId));
         log.getRoom().setCurrentStatus(newStatus);
+        log.getRoom().updateOStatus();
         return true;
     }
 

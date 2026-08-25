@@ -1,7 +1,8 @@
 package boundary;
 
 import control.HousekeepingManager;
-import entity.Room;
+import entity.*;
+import dao.RoomDAO;
 import java.util.Scanner;
 
 public class HousekeepingUI {

@@ -1,16 +1,17 @@
 package entity;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 public class StatusRecord {
-
     private String status;
     private String staffId;
     private LocalDateTime timestamp;
 
-    private static final DateTimeFormatter FORMATTER =
-            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    public StatusRecord() {
+        this.status = "";
+        this.staffId = "";
+        this.timestamp = LocalDateTime.now();
+    }
 
     public StatusRecord(String status, String staffId) {
         this.status = status;
@@ -18,15 +19,36 @@ public class StatusRecord {
         this.timestamp = LocalDateTime.now();
     }
 
-    public String getStatus() { return status; }
-    public String getStaffId() { return staffId; }
-    public LocalDateTime getTimestamp() { return timestamp; }
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getStaffId() {
+        return staffId;
+    }
+
+    public void setStaffId(String staffId) {
+        this.staffId = staffId;
+    }
+
+    public LocalDateTime getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(LocalDateTime timestamp) {
+        this.timestamp = timestamp;
+    }
 
     @Override
     public String toString() {
-        if (staffId == null || staffId.isEmpty()) {
-            return "[" + timestamp.format(FORMATTER) + "] " + status;
-        }
-        return "[" + timestamp.format(FORMATTER) + "] " + status + " (by " + staffId + ")";
+        return "StatusRecord{" +
+                "status='" + status + '\'' +
+                ", staffId='" + staffId + '\'' +
+                ", timestamp=" + timestamp +
+                '}';
     }
 }

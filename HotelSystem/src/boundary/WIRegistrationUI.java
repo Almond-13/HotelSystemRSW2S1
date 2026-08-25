@@ -11,8 +11,8 @@ public class WIRegistrationUI {
     private WIRegistrationControl control;
 
     public WIRegistrationUI(RoomDAO roomDAO, HousekeepingManager hkManager) {
-    input = new Scanner(System.in);
-    control = new WIRegistrationControl(roomDAO, hkManager);
+        input = new Scanner(System.in);
+        control = new WIRegistrationControl(roomDAO, hkManager);
     }
 
     public void ShowMenu() {
@@ -22,9 +22,12 @@ public class WIRegistrationUI {
             System.out.println("\n========== Walk-In Registration ==========");
             System.out.println("1. Register Customer");
             System.out.println("2. Update Customer Information");
-            System.out.println("3. Check In");
-            System.out.println("4. Check Out");
-            System.out.println("5. Summary Report");
+            System.out.println("3. Delete Customer");
+            System.out.println("4. Assign Room");
+            System.out.println("5. Check In");
+            System.out.println("6. Check Out");
+            System.out.println("7. Booking Report");
+            System.out.println("8. Room Occupied Report");
             System.out.println("0. Back to Main Menu");
 
             while (true) {
@@ -32,7 +35,7 @@ public class WIRegistrationUI {
                 String choiceInput = input.nextLine().trim();
                 try {
                     choice = Integer.parseInt(choiceInput);
-                    if (choice >= 0 && choice <= 5) {
+                    if (choice >= 0 && choice <= 8) {
                         break;
                     }
                     System.out.println("Invalid choice. Please enter 0, 1, 2, 3, 4 or 5.");
@@ -52,15 +55,27 @@ public class WIRegistrationUI {
                     break;
 
                 case 3:
-                    control.CheckIn();
+                    control.CancelGuest();
                     break;
 
                 case 4:
-                    control.CheckOut();
+                    control.AssignRoom();
                     break;
 
                 case 5:
+                    control.CheckIn();
+                    break;
+
+                case 6:
+                    control.CheckOut();
+                    break;
+
+                case 7:
                     control.SReport();
+                    break;
+
+                case 8:
+                    control.RoomReport();
                     break;
 
                 case 0:

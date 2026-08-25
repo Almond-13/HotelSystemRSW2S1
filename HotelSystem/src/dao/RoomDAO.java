@@ -2,33 +2,50 @@ package dao;
 
 import entity.Room;
 import adt.ArrayList;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 
 public class RoomDAO {
 
     private ArrayList<Room> rooms;
 
-    public RoomDAO(){
+    private static final String roomData = "roomData.txt";
+
+    public RoomDAO() {
 
         rooms = new ArrayList<>();
 
-        RoomData();
+        loadRooms();
     }
 
+    private void loadRooms() {
 
-    private void RoomData(){
+        try (BufferedReader br = new BufferedReader(new FileReader(roomData))) {
 
-        rooms.add(new Room("101", "Standard"));
-        rooms.add(new Room("102", "Standard"));
-        rooms.add(new Room("201", "Deluxe"));
-        rooms.add(new Room("301", "Suite"));
-        rooms.add(new Room("302", "Suite"));
-        rooms.add(new Room("303", "Suite"));
-        rooms.add(new Room("304", "Suite"));
-        
+            String line;
+
+            while ((line = br.readLine()) != null) {
+
+                if (line.trim().isEmpty()) {
+                    continue;
+                }
+
+                String[] data = line.split("\\|");
+
+                String roomNo = data[0].trim();
+                String roomType = data[1].trim();
+
+                rooms.add(new Room(roomNo, roomType));
+            }
+
+        } catch (IOException e) {
+
+            System.out.println("Error reading Room.txt: " + e.getMessage());
+        }
     }
 
-
-    public ArrayList<Room> getRooms(){
+    public ArrayList<Room> getRooms() {
 
         return rooms;
     }
