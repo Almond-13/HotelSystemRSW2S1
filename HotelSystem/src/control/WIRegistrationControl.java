@@ -936,41 +936,43 @@ public class WIRegistrationControl {
             sortingMethod = "Room Number";
         }
         System.out.println("Sorted By        : " + sortingMethod);
-        System.out.println("--------------------------------------------------------------------------");
+        System.out.println("----------------------------------------------------------------------------------------------------------------------------------------");
 
         System.out.printf(
-                "%-10s %-12s %-18s %-15s %-12s %-12s %-15s%n",
+                "%-10s %-12s %-18s %-15s %-12s %-15s %-25s %-12s%n",
                 "Guest ID",
                 "Booking ID",
                 "Guest Name",
                 "Room No",
                 "Room Type",
                 "Status",
-                "Check In");
+                "Check In Date Time",
+                "Check Out Date Time"
+            );
 
-        System.out.println(
-                "--------------------------------------------------------------------------");
+        System.out.println("-----------------------------------------------------------------------------------------------------------------------------------------");
 
         // Display Filtering Report
         for (int i = 0; i < filteredBookings.size(); i++) {
 
             Booking booking = filteredBookings.get(i);
             System.out.printf(
-                    "%-10s %-12s %-18s %-15s %-12s %-15s %-15s%n",
+                    "%-10s %-12s %-18s %-15s %-12s %-15s %-25s %-18s%n",
                     booking.getGuest().getGuestID(),
                     booking.getBookingID(),
                     booking.getGuest().getName(),
                     booking.getRoom().getRoomNo(),
                     booking.getRoom().getRoomType(),
-                    booking.getStatus());
+                    booking.getStatus(),
+                    booking.getCheckInDate(),
+                    booking.getCheckOutDate()
+                );
         }
         System.out.print("\nPress Enter to return...");
         input.nextLine();
     }
 
-    // ===================================================================
     // Sorting - Booking ID
-    // ===================================================================
     private ArrayList<Booking> sortBookingsByBookingID(
             ArrayList<Booking> source) {
 
@@ -1230,7 +1232,7 @@ public class WIRegistrationControl {
         System.out.println("Sorted By        : " + sortingMethod);
         System.out.println("--------------------------------------------------------------------------");
         System.out.printf(
-                "%-10s %-15s %-12s %-20s %-15s %-18s%n",
+                "%-10s %-15s %-12s %-20s %-18s%n",
                 "Room No",
                 "Room Type",
                 "Guest ID",
@@ -1242,7 +1244,7 @@ public class WIRegistrationControl {
         for (int i = 0; i < filteredBookings.size(); i++) {
             Booking booking = filteredBookings.get(i);
             System.out.printf(
-                    "%-10s %-15s %-12s %-20s %-15s %-18s%n",
+                    "%-10s %-15s %-12s %-20s %-18s%n",
                     booking.getRoom().getRoomNo(),
                     booking.getRoom().getRoomType(),
                     booking.getGuest().getGuestID(),
