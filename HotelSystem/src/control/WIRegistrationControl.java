@@ -310,7 +310,7 @@ public class WIRegistrationControl {
         }
 
         // Display Waiting Guests
-        System.out.println( "\n========== Guests Waiting for Room Assignment ==========");
+        System.out.println("\n========== Guests Waiting for Room Assignment ==========");
         System.out.printf(
                 "%-10s %-20s %-20s %-15s%n",
                 "Guest ID",
@@ -855,7 +855,7 @@ public class WIRegistrationControl {
         }
 
         // Searching
-        System.out.print("\nSearch Guest ID / Guest Name / Room No "+ "(Enter for All): ");
+        System.out.print("\nSearch Guest ID / Guest Name / Room No " + "(Enter for All): ");
 
         String keyword = input.nextLine().trim();
 
@@ -962,8 +962,7 @@ public class WIRegistrationControl {
                     booking.getGuest().getName(),
                     booking.getRoom().getRoomNo(),
                     booking.getRoom().getRoomType(),
-                    booking.getStatus(),
-                    booking.getCheckInDate());
+                    booking.getStatus());
         }
         System.out.print("\nPress Enter to return...");
         input.nextLine();
@@ -1141,24 +1140,26 @@ public class WIRegistrationControl {
         }
 
         // Searching===========================================
-        System.out.print("\nSearch Guest ID / Guest Name / Room Number "+ "(Enter for All): ");
+        System.out.print("\nSearch Guest ID / Guest Name / Room Number " + "(Enter for All): ");
 
         String keyword = input.nextLine().trim();
         // Apply Multiple Criteria=============================
         ArrayList<Booking> filteredBookings = new ArrayList<>();
         for (int i = 0; i < book.size(); i++) {
             Booking booking = book.get(i);
-            boolean roomTypeMatch = roomTypeFilter.equals("All")|| booking.getRoom()
-                            .getRoomType()
-                            .equalsIgnoreCase(roomTypeFilter);
-            boolean statusMatch = statusFilter.equals("All")|| booking.getStatus()
-                            .equalsIgnoreCase(statusFilter);
-            boolean searchMatch = keyword.isEmpty()|| booking.getGuest()
-                            .getGuestID()
-                            .equalsIgnoreCase(keyword)|| booking.getGuest()
+            boolean roomTypeMatch = roomTypeFilter.equals("All") || booking.getRoom()
+                    .getRoomType()
+                    .equalsIgnoreCase(roomTypeFilter);
+            boolean statusMatch = statusFilter.equals("All") || booking.getStatus()
+                    .equalsIgnoreCase(statusFilter);
+            boolean searchMatch = keyword.isEmpty() || booking.getGuest()
+                    .getGuestID()
+                    .equalsIgnoreCase(keyword)
+                    || booking.getGuest()
                             .getName()
                             .toLowerCase()
-                            .contains(keyword.toLowerCase())|| booking.getRoom()
+                            .contains(keyword.toLowerCase())
+                    || booking.getRoom()
                             .getRoomNo()
                             .equalsIgnoreCase(keyword);
 
@@ -1211,7 +1212,7 @@ public class WIRegistrationControl {
         }
 
         // Display Report
-        System.out.println( "\n==================== ROOM ACTIVITY RECORDS ====================");
+        System.out.println("\n==================== ROOM ACTIVITY RECORDS ====================");
 
         System.out.println("Room Type Filter : " + roomTypeFilter);
         System.out.println("Status Filter    : " + statusFilter);
@@ -1234,8 +1235,7 @@ public class WIRegistrationControl {
                 "Room Type",
                 "Guest ID",
                 "Guest Name",
-                "Status",
-                "Check In");
+                "Status");
 
         System.out.println("--------------------------------------------------------------------------");
 
@@ -1247,8 +1247,7 @@ public class WIRegistrationControl {
                     booking.getRoom().getRoomType(),
                     booking.getGuest().getGuestID(),
                     booking.getGuest().getName(),
-                    booking.getStatus(),
-                    booking.getCheckInDate());
+                    booking.getStatus());
         }
 
         System.out.println("--------------------------------------------------------------------------");
