@@ -26,7 +26,8 @@ public class WIRegistrationUI {
             System.out.println("4. Assign Room");
             System.out.println("5. Check In");
             System.out.println("6. Check Out");
-            System.out.println("7. Summary Report");
+            System.out.println("7. Booking Report");
+            System.out.println("8. Room Occupied Report");
             System.out.println("0. Back to Main Menu");
 
             while (true) {
@@ -34,7 +35,7 @@ public class WIRegistrationUI {
                 String choiceInput = input.nextLine().trim();
                 try {
                     choice = Integer.parseInt(choiceInput);
-                    if (choice >= 0 && choice <= 7) {
+                    if (choice >= 0 && choice <= 8) {
                         break;
                     }
                     System.out.println("Invalid choice. Please enter 0, 1, 2, 3, 4 or 5.");
@@ -71,6 +72,10 @@ public class WIRegistrationUI {
 
                 case 7:
                     control.SReport();
+                    break;
+
+                case 8:
+                    control.RoomReport();
                     break;
 
                 case 0:
