@@ -105,7 +105,7 @@ public class VipRoomAllocationControl {
         ArrayList<Room> rooms = roomDAO.getRooms();
         for (int i = 0; i < rooms.size(); i++) {
             Room room = rooms.get(i);
-            if (room.isBookable() && room.getRoomType().equalsIgnoreCase(preferredRoomType.name())) {
+            if (room.isBookable() && room.getRoomType() == preferredRoomType) {
                 return room;
             }
         }

@@ -3,29 +3,29 @@ package entity;
 public class Room {
 
     private String roomNo;
-    private String roomType;
-    private String currentStatus;
+    private RoomType roomType;
+    private RoomStatus currentStatus;
     private String occupancyStatus;
     private Guest CGuest; //For Guest Check Out (due to Guest Check-In will dequeue)
 
-    public Room(String roomNo, String roomType){
+    public Room(String roomNo, RoomType roomType){
         this.roomNo = roomNo;
         this.roomType = roomType;
-        this.currentStatus = "Clean"; 
+        this.currentStatus = RoomStatus.CLEAN;
         this.occupancyStatus="Available";
     }
 
     public String getRoomNo() { return roomNo; }
-    public String getRoomType() { return roomType; }
-    public String getCurrentStatus() { return currentStatus; }
+    public RoomType getRoomType() { return roomType; }
+    public RoomStatus getCurrentStatus() { return currentStatus; }
     public String getOccupancyStatus() { return occupancyStatus; }
     public Guest getCGuest() {return CGuest;}
 
     public void setCGuest(Guest CGuest) {this.CGuest = CGuest;}
-    public void setCurrentStatus(String currentStatus) { this.currentStatus = currentStatus; }
+    public void setCurrentStatus(RoomStatus currentStatus) { this.currentStatus = currentStatus; }
     public void setOccupancyStatus(String OccupancyStatus) { this.occupancyStatus = OccupancyStatus; }
     public void updateOStatus() {
-        if (currentStatus.equals("Clean")) {
+        if (currentStatus == RoomStatus.CLEAN) {
             occupancyStatus = "Available";
         } else {
             occupancyStatus = "Unavailable";
@@ -34,7 +34,7 @@ public class Room {
 
     public boolean isBookable() {
     return occupancyStatus.equals("Available")
-        && currentStatus.equals("Clean");}
+        && currentStatus == RoomStatus.CLEAN;}
 
     @Override
     public String toString() {

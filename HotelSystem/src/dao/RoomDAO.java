@@ -1,6 +1,7 @@
 package dao;
 
 import entity.Room;
+import entity.RoomType;
 import adt.ArrayList;
 
 public class RoomDAO {
@@ -17,13 +18,13 @@ public class RoomDAO {
 
     private void RoomData(){
 
-        rooms.add(new Room("101", "Standard"));
-        rooms.add(new Room("102", "Standard"));
-        rooms.add(new Room("201", "Deluxe"));
-        rooms.add(new Room("301", "Suite"));
-        rooms.add(new Room("302", "Suite"));
-        rooms.add(new Room("303", "Suite"));
-        rooms.add(new Room("304", "Suite"));
+        rooms.add(new Room("101", RoomType.STANDARD));
+        rooms.add(new Room("102", RoomType.STANDARD));
+        rooms.add(new Room("201", RoomType.DELUXE));
+        rooms.add(new Room("301", RoomType.SUITE));
+        rooms.add(new Room("302", RoomType.SUITE));
+        rooms.add(new Room("303", RoomType.SUITE));
+        rooms.add(new Room("304", RoomType.SUITE));
         
     }
 

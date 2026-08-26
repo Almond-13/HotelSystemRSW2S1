@@ -476,7 +476,7 @@ public class WIRegistrationControl {
         Booking booking = selectedBooking;
         booking.setStatus("Checked Out");
         Room room = booking.getRoom();
-        room.setCurrentStatus("Dirty");
+        room.setCurrentStatus(RoomStatus.DIRTY);
         room.updateOStatus();
 
         System.out.println("\n========== Check Out Summary ==========");
