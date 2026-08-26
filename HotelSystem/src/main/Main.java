@@ -4,6 +4,7 @@ import java.util.Scanner;
 
 import boundary.HousekeepingUI;
 import boundary.LoyaltyRewardsUI;
+import boundary.VIPUI;
 import boundary.WIRegistrationUI;
 import control.HousekeepingManager;
 import dao.RoomDAO;
@@ -14,6 +15,7 @@ public class Main {
         RoomDAO roomDAO = new RoomDAO();
         HousekeepingManager hkManager = new HousekeepingManager(roomDAO.getRooms());
         WIRegistrationUI WIRUI = new WIRegistrationUI(roomDAO, hkManager);
+        VIPUI VIPUI = new VIPUI(input, roomDAO);
         HousekeepingUI HKUI = new HousekeepingUI(input, hkManager);
 
         int choice;
@@ -47,7 +49,8 @@ public class Main {
                     WIRUI.ShowMenu();
                     break;
                 case 2:
-                    // VIP
+                    VIPUI.run();   
+                    break;
                 case 3:
                     HKUI.run();
                     break;
