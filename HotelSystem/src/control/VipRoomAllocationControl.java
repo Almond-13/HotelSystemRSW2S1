@@ -52,6 +52,9 @@ public class VipRoomAllocationControl {
         if (availableRoom == null) {
             return null;
         }
+        if (allocatedCount == allocatedRequests.length) {
+            return null;
+        }
 
         request = waitingQueue.removeMax();
         availableRoom.setOccupancyStatus("Occupied");
@@ -66,6 +69,45 @@ public class VipRoomAllocationControl {
 
     public VipAllocationRequest[] getWaitingReport() {
         return waitingQueue.toPriorityOrderArray();
+    }
+
+    public VipAllocationRequest searchWaitingRequest(String confirmationNumber) {
+        VipAllocationRequest[] waitingReport = waitingQueue.toPriorityOrderArray();
+        for (int i = 0; i < waitingReport.length; i++) {
+            if (waitingReport[i].getGuestProfile().getConfirmationNumber().equals(confirmationNumber)) {
+                return waitingReport[i];
+            }
+        }
+        return null;
+    }
+
+    public VipAllocationRequest searchAllocatedRequest(String confirmationNumber) {
+        for (int i = 0; i < allocatedCount; i++) {
+            if (allocatedRequests[i].getGuestProfile().getConfirmationNumber().equals(confirmationNumber)) {
+                return allocatedRequests[i];
+            }
+        }
+        return null;
+    }
+
+    public boolean isConfirmationNumberUsed(String confirmationNumber) {
+        return searchWaitingRequest(confirmationNumber) != null
+                || searchAllocatedRequest(confirmationNumber) != null;
+    }
+
+    public boolean cancelWaitingRequest(String confirmationNumber) {
+        VipAllocationRequest[] waitingReport = waitingQueue.toPriorityOrderArray();
+        boolean found = false;
+        waitingQueue.clear();
+
+        for (int i = 0; i < waitingReport.length; i++) {
+            if (waitingReport[i].getGuestProfile().getConfirmationNumber().equals(confirmationNumber)) {
+                found = true;
+            } else {
+                waitingQueue.add(waitingReport[i]);
+            }
+        }
+        return found;
     }
 
     public VipAllocationRequest[] getAllocatedReport() {
@@ -99,6 +141,21 @@ public class VipRoomAllocationControl {
 
     public int getWaitingCount() {
         return waitingQueue.getNumberOfEntries();
+    }
+
+    public int getAllocatedCount() {
+        return allocatedCount;
+    }
+
+    public int countWaitingByTier(LoyaltyTier tier) {
+        int count = 0;
+        VipAllocationRequest[] waitingReport = waitingQueue.toPriorityOrderArray();
+        for (int i = 0; i < waitingReport.length; i++) {
+            if (waitingReport[i].getGuestProfile().getLoyaltyTier() == tier) {
+                count++;
+            }
+        }
+        return count;
     }
 
     private Room findReadyRoom(RoomType preferredRoomType) {

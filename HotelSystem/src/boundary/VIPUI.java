@@ -35,13 +35,22 @@ public class VIPUI {
                     displayNextVip();
                     break;
                 case 4:
-                    displayWaitingReport();
+                    searchVipRequest();
                     break;
                 case 5:
-                    displayAllocatedReport();
+                    cancelVipRequest();
                     break;
                 case 6:
+                    displayWaitingReport();
+                    break;
+                case 7:
+                    displayAllocatedReport();
+                    break;
+                case 8:
                     displayReadyRoomsReport();
+                    break;
+                case 9:
+                    displayAllocationSummaryReport();
                     break;
                 case 0:
                     System.out.println("Returning to Main Menu...");
@@ -58,17 +67,20 @@ public class VIPUI {
         System.out.println("1. Add VIP allocation request");
         System.out.println("2. Allocate room to highest priority VIP");
         System.out.println("3. View next VIP in queue");
-        System.out.println("4. Report: VIP waiting queue by priority");
-        System.out.println("5. Report: Allocated VIP rooms");
-        System.out.println("6. Report: Ready rooms");
+        System.out.println("4. Search VIP request");
+        System.out.println("5. Cancel waiting VIP request");
+        System.out.println("6. Report: VIP waiting queue by priority");
+        System.out.println("7. Report: Allocated VIP rooms");
+        System.out.println("8. Report: Ready rooms");
+        System.out.println("9. Report: VIP allocation summary");
         System.out.println("0. Back to Main Menu");
     }
 
     private void addVipRequest() {
-        String confirmationNumber = readString("Confirmation number (8 digits): ");
-        String guestName = readString("Guest name: ");
+        String confirmationNumber = readConfirmationNumber();
+        String guestName = readRequiredString("Guest name: ");
         LoyaltyTier tier = readTier();
-        int points = readInt("Reward points: ");
+        int points = readNonNegativeInt("Reward points: ");
         RoomType roomType = readRoomType();
 
         VipAllocationRequest request = control.addVipRequest(
@@ -91,6 +103,41 @@ public class VIPUI {
             System.out.println("No VIP is waiting.");
         } else {
             System.out.println("Next VIP: " + next);
+        }
+    }
+
+    private void searchVipRequest() {
+        String confirmationNumber = readString("Confirmation number to search: ");
+        VipAllocationRequest waitingRequest = control.searchWaitingRequest(confirmationNumber);
+        if (waitingRequest != null) {
+            System.out.println("Found in waiting queue: " + waitingRequest);
+            return;
+        }
+
+        VipAllocationRequest allocatedRequest = control.searchAllocatedRequest(confirmationNumber);
+        if (allocatedRequest != null) {
+            System.out.println("Found in allocated records: " + allocatedRequest);
+            return;
+        }
+
+        System.out.println("No VIP request found for confirmation number " + confirmationNumber + ".");
+    }
+
+    private void cancelVipRequest() {
+        String confirmationNumber = readString("Confirmation number to cancel: ");
+        VipAllocationRequest request = control.searchWaitingRequest(confirmationNumber);
+        if (request == null) {
+            System.out.println("Only waiting requests can be cancelled. No waiting request found.");
+            return;
+        }
+
+        System.out.println("Selected request: " + request);
+        String confirm = readString("Confirm cancellation? (Y/N): ");
+        if (confirm.equalsIgnoreCase("Y")) {
+            control.cancelWaitingRequest(confirmationNumber);
+            System.out.println("VIP request cancelled.");
+        } else {
+            System.out.println("Cancellation aborted.");
         }
     }
 
@@ -134,35 +181,60 @@ public class VIPUI {
         }
     }
 
+    private void displayAllocationSummaryReport() {
+        System.out.println("\nVIP Allocation Summary Report");
+        System.out.println("Total waiting requests  : " + control.getWaitingCount());
+        System.out.println("Total allocated requests: " + control.getAllocatedCount());
+        System.out.println();
+        System.out.println("Waiting requests by loyalty tier");
+        System.out.println("Elite    : " + control.countWaitingByTier(LoyaltyTier.ELITE));
+        System.out.println("Diamond  : " + control.countWaitingByTier(LoyaltyTier.DIAMOND));
+        System.out.println("Platinum : " + control.countWaitingByTier(LoyaltyTier.PLATINUM));
+        System.out.println("Gold     : " + control.countWaitingByTier(LoyaltyTier.GOLD));
+        System.out.println("Silver   : " + control.countWaitingByTier(LoyaltyTier.SILVER));
+    }
+
     private LoyaltyTier readTier() {
         System.out.println("Tier: 1 Silver, 2 Gold, 3 Platinum, 4 Diamond, 5 Elite");
-        int choice = readInt("Select tier: ");
-        switch (choice) {
-            case 5:
-                return LoyaltyTier.ELITE;
-            case 4:
-                return LoyaltyTier.DIAMOND;
-            case 3:
-                return LoyaltyTier.PLATINUM;
-            case 2:
-                return LoyaltyTier.GOLD;
-            default:
-                return LoyaltyTier.SILVER;
+        while (true) {
+            int choice = readInt("Select tier: ");
+            switch (choice) {
+                case 5:
+                    return LoyaltyTier.ELITE;
+                case 4:
+                    return LoyaltyTier.DIAMOND;
+                case 3:
+                    return LoyaltyTier.PLATINUM;
+                case 2:
+                    return LoyaltyTier.GOLD;
+                case 1:
+                    return LoyaltyTier.SILVER;
+                default:
+                    System.out.println("Invalid tier. Please enter 1 to 5.");
+                    break;
+            }
         }
     }
 
     private RoomType readRoomType() {
-        System.out.println("Room type: 1 Deluxe, 2 Suite, 3 Executive, 4 Presidential");
-        int choice = readInt("Select room type: ");
-        switch (choice) {
-            case 4:
-                return RoomType.PRESIDENTIAL;
-            case 3:
-                return RoomType.EXECUTIVE;
-            case 2:
-                return RoomType.SUITE;
-            default:
-                return RoomType.DELUXE;
+        System.out.println("Room type: 1 Standard, 2 Deluxe, 3 Suite, 4 Executive, 5 Presidential");
+        while (true) {
+            int choice = readInt("Select room type: ");
+            switch (choice) {
+                case 5:
+                    return RoomType.PRESIDENTIAL;
+                case 4:
+                    return RoomType.EXECUTIVE;
+                case 3:
+                    return RoomType.SUITE;
+                case 2:
+                    return RoomType.DELUXE;
+                case 1:
+                    return RoomType.STANDARD;
+                default:
+                    System.out.println("Invalid room type. Please enter 1 to 5.");
+                    break;
+            }
         }
     }
 
@@ -181,6 +253,41 @@ public class VIPUI {
     private String readString(String prompt) {
         System.out.print(prompt);
         return input.nextLine().trim();
+    }
+
+    private String readRequiredString(String prompt) {
+        while (true) {
+            String value = readString(prompt);
+            if (!value.isEmpty()) {
+                return value;
+            }
+            System.out.println("Input cannot be empty.");
+        }
+    }
+
+    private String readConfirmationNumber() {
+        while (true) {
+            String confirmationNumber = readString("Confirmation number (8 digits): ");
+            if (!confirmationNumber.matches("\\d{8}")) {
+                System.out.println("Confirmation number must be exactly 8 digits.");
+                continue;
+            }
+            if (control.isConfirmationNumberUsed(confirmationNumber)) {
+                System.out.println("Confirmation number already exists.");
+                continue;
+            }
+            return confirmationNumber;
+        }
+    }
+
+    private int readNonNegativeInt(String prompt) {
+        while (true) {
+            int value = readInt(prompt);
+            if (value >= 0) {
+                return value;
+            }
+            System.out.println("Value cannot be negative.");
+        }
     }
 
     private void seedVipRequests() {
