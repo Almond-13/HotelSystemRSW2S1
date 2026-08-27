@@ -3,6 +3,7 @@ package boundary;
 import control.VipRoomAllocationControl;
 import dao.RoomDAO;
 import entity.LoyaltyTier;
+import entity.LoyaltyTierMember;
 import entity.Room;
 import entity.RoomType;
 import entity.VipAllocationRequest;
@@ -26,30 +27,36 @@ public class VIPUI {
 
             switch (choice) {
                 case 1:
-                    addVipRequest();
+                    registerLoyaltyTierMember();
                     break;
                 case 2:
-                    allocateNextVip();
+                    registerVipRoomRequest();
                     break;
                 case 3:
-                    displayNextVip();
+                    allocateNextVip();
                     break;
                 case 4:
-                    searchVipRequest();
+                    displayNextVip();
                     break;
                 case 5:
-                    cancelVipRequest();
+                    searchVipRequest();
                     break;
                 case 6:
-                    displayWaitingReport();
+                    cancelVipRequest();
                     break;
                 case 7:
-                    displayAllocatedReport();
+                    displayMemberReport();
                     break;
                 case 8:
-                    displayReadyRoomsReport();
+                    displayWaitingReport();
                     break;
                 case 9:
+                    displayAllocatedReport();
+                    break;
+                case 10:
+                    displayReadyRoomsReport();
+                    break;
+                case 11:
                     displayAllocationSummaryReport();
                     break;
                 case 0:
@@ -64,31 +71,56 @@ public class VIPUI {
 
     private void printMenu() {
         System.out.println("\n========== VIP Room Allocation ==========");
-        System.out.println("1. Add VIP allocation request");
-        System.out.println("2. Allocate room to highest priority VIP");
-        System.out.println("3. View next VIP in queue");
-        System.out.println("4. Search VIP request");
-        System.out.println("5. Cancel waiting VIP request");
-        System.out.println("6. Report: VIP waiting queue by priority");
-        System.out.println("7. Report: Allocated VIP rooms");
-        System.out.println("8. Report: Ready rooms");
-        System.out.println("9. Report: VIP allocation summary");
+        System.out.println("1. Register Loyalty Tier Member");
+        System.out.println("2. Register VIP Room Request");
+        System.out.println("3. Allocate Room to Next VIP Guest");
+        System.out.println("4. View Next VIP Guest");
+        System.out.println("5. Search VIP Room Request");
+        System.out.println("6. Cancel VIP Room Request");
+        System.out.println("7. Report: Loyalty Tier Members");
+        System.out.println("8. Report: VIP Waiting Queue");
+        System.out.println("9. Report: Allocated VIP Rooms");
+        System.out.println("10. Report: Ready Rooms");
+        System.out.println("11. Report: VIP Allocation Summary");
         System.out.println("0. Back to Main Menu");
     }
 
-    private void addVipRequest() {
-        String confirmationNumber = readConfirmationNumber();
+    private void registerLoyaltyTierMember() {
         String guestName = readRequiredString("Guest name: ");
+        String phoneNumber = readPhoneNumber();
         printTierThresholds();
         int points = readNonNegativeInt("Historical reward points: ");
-        LoyaltyTier tier = LoyaltyTier.fromRewardPoints(points);
-        System.out.println("Auto-assigned loyalty tier: " + tier);
-        System.out.println("Highest eligible room type: " + tier.getHighestEligibleRoomType());
-        RoomType roomType = readRoomType(tier);
+
+        LoyaltyTierMember member = control.registerLoyaltyTierMember(guestName, phoneNumber, points);
+        if (member == null) {
+            System.out.println("Unable to register member. Member storage is full.");
+            return;
+        }
+
+        System.out.println("Member registered: " + member);
+    }
+
+    private void registerVipRoomRequest() {
+        if (control.getMemberCount() == 0) {
+            System.out.println("No loyalty tier member found. Please register a member first.");
+            return;
+        }
+
+        String confirmationNumber = readConfirmationNumber();
+        String memberId = readRequiredString("Member ID: ");
+        LoyaltyTierMember member = control.findMemberById(memberId);
+        if (member == null) {
+            System.out.println("Member ID not found. Please register the loyalty tier member first.");
+            return;
+        }
+
+        System.out.println("Selected member: " + member);
+        System.out.println("Highest eligible room type: " + member.getLoyaltyTier().getHighestEligibleRoomType());
+        RoomType roomType = readRoomType(member.getLoyaltyTier());
 
         VipAllocationRequest request = control.addVipRequest(
-                confirmationNumber, guestName, points, roomType);
-        System.out.println("Added: " + request);
+                confirmationNumber, memberId, roomType);
+        System.out.println("VIP room request registered: " + request);
     }
 
     private void allocateNextVip() {
@@ -161,6 +193,18 @@ public class VIPUI {
         VipAllocationRequest[] report = control.getAllocatedReport();
         if (report.length == 0) {
             System.out.println("No VIP rooms allocated yet.");
+            return;
+        }
+        for (int i = 0; i < report.length; i++) {
+            System.out.println((i + 1) + ". " + report[i]);
+        }
+    }
+
+    private void displayMemberReport() {
+        System.out.println("\nLoyalty Tier Member Report");
+        LoyaltyTierMember[] report = control.getMemberReport();
+        if (report.length == 0) {
+            System.out.println("No loyalty tier members registered.");
             return;
         }
         for (int i = 0; i < report.length; i++) {
@@ -300,6 +344,16 @@ public class VIPUI {
         }
     }
 
+    private String readPhoneNumber() {
+        while (true) {
+            String phoneNumber = readRequiredString("Phone number: ");
+            if (phoneNumber.matches("\\d{10,12}")) {
+                return phoneNumber;
+            }
+            System.out.println("Phone number must contain 10 to 12 digits.");
+        }
+    }
+
     private String readConfirmationNumber() {
         while (true) {
             String confirmationNumber = readString("Confirmation number (8 digits): ");
@@ -326,8 +380,11 @@ public class VIPUI {
     }
 
     private void seedVipRequests() {
-        control.addVipRequest("10000001", "Tan Mei Ling", 4300, RoomType.SUITE);
-        control.addVipRequest("10000002", "Jason Lim", 5200, RoomType.SUITE);
-        control.addVipRequest("10000003", "Nur Aisyah", 2400, RoomType.DELUXE);
+        control.registerLoyaltyTierMember("Tan Mei Ling", "0123456789", 4300);
+        control.registerLoyaltyTierMember("Jason Lim", "0134567891", 5200);
+        control.registerLoyaltyTierMember("Nur Aisyah", "0145678912", 2400);
+        control.addVipRequest("10000001", "VTM001", RoomType.SUITE);
+        control.addVipRequest("10000002", "VTM002", RoomType.SUITE);
+        control.addVipRequest("10000003", "VTM003", RoomType.DELUXE);
     }
 }

@@ -6,18 +6,23 @@ import adt.VipPriorityQueue;
 import dao.RoomDAO;
 import entity.GuestProfile;
 import entity.LoyaltyTier;
+import entity.LoyaltyTierMember;
 import entity.Room;
 import entity.RoomType;
 import entity.VipAllocationRequest;
 
 public class VipRoomAllocationControl {
     private static final int MAX_ALLOCATED = 50;
+    private static final int MAX_MEMBERS = 100;
 
     private final VipPriorityQueue waitingQueue;
     private final RoomDAO roomDAO;
+    private final LoyaltyTierMember[] members;
     private final VipAllocationRequest[] allocatedRequests;
+    private int memberCount;
     private int allocatedCount;
     private long nextArrivalSequence;
+    private int nextMemberNumber;
 
     public VipRoomAllocationControl() {
         this(new RoomDAO());
@@ -26,9 +31,56 @@ public class VipRoomAllocationControl {
     public VipRoomAllocationControl(RoomDAO roomDAO) {
         waitingQueue = new VipPriorityQueue();
         this.roomDAO = roomDAO;
+        members = new LoyaltyTierMember[MAX_MEMBERS];
         allocatedRequests = new VipAllocationRequest[MAX_ALLOCATED];
+        memberCount = 0;
         allocatedCount = 0;
         nextArrivalSequence = 1;
+        nextMemberNumber = 1;
+    }
+
+    public LoyaltyTierMember registerLoyaltyTierMember(String guestName, String phoneNumber,
+            int historicalRewardPoints) {
+        if (memberCount == members.length) {
+            return null;
+        }
+
+        LoyaltyTierMember member = new LoyaltyTierMember(generateMemberId(), guestName, phoneNumber,
+                historicalRewardPoints);
+        members[memberCount++] = member;
+        return member;
+    }
+
+    public LoyaltyTierMember findMemberById(String memberId) {
+        for (int i = 0; i < memberCount; i++) {
+            if (members[i].getMemberId().equalsIgnoreCase(memberId)) {
+                return members[i];
+            }
+        }
+        return null;
+    }
+
+    public LoyaltyTierMember[] getMemberReport() {
+        LoyaltyTierMember[] report = new LoyaltyTierMember[memberCount];
+        for (int i = 0; i < memberCount; i++) {
+            report[i] = members[i];
+        }
+        sortMembersByTierThenPoints(report);
+        return report;
+    }
+
+    public int getMemberCount() {
+        return memberCount;
+    }
+
+    public VipAllocationRequest addVipRequest(String confirmationNumber, String memberId,
+            RoomType preferredRoomType) {
+        LoyaltyTierMember member = findMemberById(memberId);
+        if (member == null) {
+            return null;
+        }
+        return addVipRequest(confirmationNumber, member.getGuestName(),
+                member.getHistoricalRewardPoints(), preferredRoomType);
     }
 
     public VipAllocationRequest addVipRequest(String confirmationNumber, String guestName,
@@ -191,6 +243,31 @@ public class VipRoomAllocationControl {
             return preferredRoomType;
         }
         return tier.getHighestEligibleRoomType();
+    }
+
+    private String generateMemberId() {
+        return "VTM" + String.format("%03d", nextMemberNumber++);
+    }
+
+    private void sortMembersByTierThenPoints(LoyaltyTierMember[] report) {
+        for (int i = 1; i < report.length; i++) {
+            LoyaltyTierMember current = report[i];
+            int j = i - 1;
+            while (j >= 0 && shouldMoveMemberRight(report[j], current)) {
+                report[j + 1] = report[j];
+                j--;
+            }
+            report[j + 1] = current;
+        }
+    }
+
+    private boolean shouldMoveMemberRight(LoyaltyTierMember existing, LoyaltyTierMember current) {
+        int existingTier = existing.getLoyaltyTier().getPriority();
+        int currentTier = current.getLoyaltyTier().getPriority();
+        if (existingTier != currentTier) {
+            return existingTier < currentTier;
+        }
+        return existing.getHistoricalRewardPoints() < current.getHistoricalRewardPoints();
     }
 
     private void sortAllocatedByTierThenRoom(VipAllocationRequest[] report) {
