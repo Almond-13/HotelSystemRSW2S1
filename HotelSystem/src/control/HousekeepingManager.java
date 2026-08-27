@@ -6,6 +6,7 @@ import entity.HousekeepingLog;
 import entity.StatusRecord;
 import adt.LinkedStack;
 import adt.ArrayList;
+import java.time.format.DateTimeFormatter;
 
 public class HousekeepingManager {
 
@@ -183,19 +184,29 @@ public class HousekeepingManager {
             return false;
         }
 
-        System.out.println("Status history for Room " + roomNo + " (most recent first):");
+        System.out.println("\n==================================================");
+        System.out.println("      STATUS HISTORY - ROOM " + roomNo);
+        System.out.println("==================================================");
+
+        System.out.printf("%-22s %-15s %-20s%n", "Status", "By", "Timestamp");
+        System.out.println("--------------------------------------------------");
+
         LinkedStack<StatusRecord> original = log.getHistory();
         LinkedStack<StatusRecord> temp = new LinkedStack<>();
 
-        // Pop Into Temp Stack To Print, Then Restore Original Order
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
         while (!original.isEmpty()) {
             StatusRecord r = original.pop();
-            System.out.println("  " + r);
+            String formattedTime = r.getTimestamp().format(formatter);
+            System.out.printf("%-22s %-15s %-20s%n", r.getStatus(), r.getStaffId(), formattedTime);
             temp.push(r);
         }
         while (!temp.isEmpty()) {
             original.push(temp.pop());
         }
+
+        System.out.println("--------------------------------------------------");
         return true;
     }
 
