@@ -79,12 +79,15 @@ public class VIPUI {
     private void addVipRequest() {
         String confirmationNumber = readConfirmationNumber();
         String guestName = readRequiredString("Guest name: ");
-        LoyaltyTier tier = readTier();
-        int points = readNonNegativeInt("Reward points: ");
-        RoomType roomType = readRoomType();
+        printTierThresholds();
+        int points = readNonNegativeInt("Historical reward points: ");
+        LoyaltyTier tier = LoyaltyTier.fromRewardPoints(points);
+        System.out.println("Auto-assigned loyalty tier: " + tier);
+        System.out.println("Highest eligible room type: " + tier.getHighestEligibleRoomType());
+        RoomType roomType = readRoomType(tier);
 
         VipAllocationRequest request = control.addVipRequest(
-                confirmationNumber, guestName, tier, points, roomType);
+                confirmationNumber, guestName, points, roomType);
         System.out.println("Added: " + request);
     }
 
@@ -187,55 +190,87 @@ public class VIPUI {
         System.out.println("Total allocated requests: " + control.getAllocatedCount());
         System.out.println();
         System.out.println("Waiting requests by loyalty tier");
-        System.out.println("Elite    : " + control.countWaitingByTier(LoyaltyTier.ELITE));
-        System.out.println("Diamond  : " + control.countWaitingByTier(LoyaltyTier.DIAMOND));
         System.out.println("Platinum : " + control.countWaitingByTier(LoyaltyTier.PLATINUM));
         System.out.println("Gold     : " + control.countWaitingByTier(LoyaltyTier.GOLD));
         System.out.println("Silver   : " + control.countWaitingByTier(LoyaltyTier.SILVER));
+        System.out.println("Bronze   : " + control.countWaitingByTier(LoyaltyTier.BRONZE));
     }
 
-    private LoyaltyTier readTier() {
-        System.out.println("Tier: 1 Silver, 2 Gold, 3 Platinum, 4 Diamond, 5 Elite");
-        while (true) {
-            int choice = readInt("Select tier: ");
-            switch (choice) {
-                case 5:
-                    return LoyaltyTier.ELITE;
-                case 4:
-                    return LoyaltyTier.DIAMOND;
-                case 3:
-                    return LoyaltyTier.PLATINUM;
-                case 2:
-                    return LoyaltyTier.GOLD;
-                case 1:
-                    return LoyaltyTier.SILVER;
-                default:
-                    System.out.println("Invalid tier. Please enter 1 to 5.");
-                    break;
-            }
+    private RoomType readRoomType(LoyaltyTier tier) {
+        System.out.println("Eligible room type options");
+        System.out.println("1 Standard");
+        if (isEligibleRoomType(tier, RoomType.DELUXE)) {
+            System.out.println("2 Deluxe");
         }
-    }
-
-    private RoomType readRoomType() {
-        System.out.println("Room type: 1 Standard, 2 Deluxe, 3 Suite, 4 Executive, 5 Presidential");
+        if (isEligibleRoomType(tier, RoomType.SUITE)) {
+            System.out.println("3 Suite");
+        }
+        if (isEligibleRoomType(tier, RoomType.EXECUTIVE)) {
+            System.out.println("4 Executive");
+        }
+        if (isEligibleRoomType(tier, RoomType.PRESIDENTIAL)) {
+            System.out.println("5 Presidential");
+        }
         while (true) {
             int choice = readInt("Select room type: ");
             switch (choice) {
                 case 5:
-                    return RoomType.PRESIDENTIAL;
+                    if (isEligibleRoomType(tier, RoomType.PRESIDENTIAL)) {
+                        return RoomType.PRESIDENTIAL;
+                    }
+                    break;
                 case 4:
-                    return RoomType.EXECUTIVE;
+                    if (isEligibleRoomType(tier, RoomType.EXECUTIVE)) {
+                        return RoomType.EXECUTIVE;
+                    }
+                    break;
                 case 3:
-                    return RoomType.SUITE;
+                    if (isEligibleRoomType(tier, RoomType.SUITE)) {
+                        return RoomType.SUITE;
+                    }
+                    break;
                 case 2:
-                    return RoomType.DELUXE;
+                    if (isEligibleRoomType(tier, RoomType.DELUXE)) {
+                        return RoomType.DELUXE;
+                    }
+                    break;
                 case 1:
                     return RoomType.STANDARD;
                 default:
-                    System.out.println("Invalid room type. Please enter 1 to 5.");
                     break;
             }
+            System.out.println("Invalid room type for " + tier
+                    + ". Please select up to " + tier.getHighestEligibleRoomType() + ".");
         }
+    }
+
+    private boolean isEligibleRoomType(LoyaltyTier tier, RoomType roomType) {
+        return getRoomTypeRank(roomType) <= getRoomTypeRank(tier.getHighestEligibleRoomType());
+    }
+
+    private int getRoomTypeRank(RoomType roomType) {
+        switch (roomType) {
+            case PRESIDENTIAL:
+                return 5;
+            case EXECUTIVE:
+                return 4;
+            case SUITE:
+                return 3;
+            case DELUXE:
+                return 2;
+            case STANDARD:
+            default:
+                return 1;
+        }
+    }
+
+    private void printTierThresholds() {
+        System.out.println("Tier is calculated from historical reward points.");
+        System.out.println("Bronze   : 0 - 999");
+        System.out.println("Silver   : 1000 - 2499");
+        System.out.println("Gold     : 2500 - 4999");
+        System.out.println("Platinum : 5000 and above");
+        System.out.println("Current stay points are earned after checkout, not before this allocation.");
     }
 
     private int readInt(String prompt) {
@@ -291,8 +326,8 @@ public class VIPUI {
     }
 
     private void seedVipRequests() {
-        control.addVipRequest("10000001", "Tan Mei Ling", LoyaltyTier.PLATINUM, 4300, RoomType.SUITE);
-        control.addVipRequest("10000002", "Jason Lim", LoyaltyTier.ELITE, 3900, RoomType.SUITE);
-        control.addVipRequest("10000003", "Nur Aisyah", LoyaltyTier.DIAMOND, 7800, RoomType.DELUXE);
+        control.addVipRequest("10000001", "Tan Mei Ling", 4300, RoomType.SUITE);
+        control.addVipRequest("10000002", "Jason Lim", 5200, RoomType.SUITE);
+        control.addVipRequest("10000003", "Nur Aisyah", 2400, RoomType.DELUXE);
     }
 }

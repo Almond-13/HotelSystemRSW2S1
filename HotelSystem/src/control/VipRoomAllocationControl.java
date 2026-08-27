@@ -32,7 +32,19 @@ public class VipRoomAllocationControl {
     }
 
     public VipAllocationRequest addVipRequest(String confirmationNumber, String guestName,
+            int rewardPoints, RoomType preferredRoomType) {
+        LoyaltyTier tier = LoyaltyTier.fromRewardPoints(rewardPoints);
+        RoomType eligibleRoomType = getEligibleRoomType(tier, preferredRoomType);
+        GuestProfile guestProfile = new GuestProfile(confirmationNumber, guestName, tier, rewardPoints);
+        VipAllocationRequest request = new VipAllocationRequest(guestProfile, eligibleRoomType, nextArrivalSequence++);
+        waitingQueue.add(request);
+        return request;
+    }
+
+    public VipAllocationRequest addVipRequest(String confirmationNumber, String guestName,
             LoyaltyTier tier, int rewardPoints, RoomType preferredRoomType) {
+        tier = LoyaltyTier.fromRewardPoints(rewardPoints);
+        preferredRoomType = getEligibleRoomType(tier, preferredRoomType);
         GuestProfile guestProfile = new GuestProfile(confirmationNumber, guestName, tier, rewardPoints);
         VipAllocationRequest request = new VipAllocationRequest(guestProfile, preferredRoomType, nextArrivalSequence++);
         waitingQueue.add(request);
@@ -45,10 +57,7 @@ public class VipRoomAllocationControl {
             return null;
         }
 
-        Room availableRoom = findReadyRoom(request.getPreferredRoomType());
-        if (availableRoom == null) {
-            availableRoom = findAnyReadyRoom();
-        }
+        Room availableRoom = findBestEligibleReadyRoom(request.getPreferredRoomType());
         if (availableRoom == null) {
             return null;
         }
@@ -158,26 +167,30 @@ public class VipRoomAllocationControl {
         return count;
     }
 
-    private Room findReadyRoom(RoomType preferredRoomType) {
+    private Room findBestEligibleReadyRoom(RoomType highestAllowedRoomType) {
         ArrayList<Room> rooms = roomDAO.getRooms();
+        Room bestRoom = null;
+
         for (int i = 0; i < rooms.size(); i++) {
             Room room = rooms.get(i);
-            if (room.isBookable() && room.getRoomType() == preferredRoomType) {
-                return room;
+            if (!room.isBookable()) {
+                continue;
+            }
+            if (compareRoomType(room.getRoomType(), highestAllowedRoomType) > 0) {
+                continue;
+            }
+            if (bestRoom == null || compareRoomType(room.getRoomType(), bestRoom.getRoomType()) > 0) {
+                bestRoom = room;
             }
         }
-        return null;
+        return bestRoom;
     }
 
-    private Room findAnyReadyRoom() {
-        ArrayList<Room> rooms = roomDAO.getRooms();
-        for (int i = 0; i < rooms.size(); i++) {
-            Room room = rooms.get(i);
-            if (room.isBookable()) {
-                return room;
-            }
+    private RoomType getEligibleRoomType(LoyaltyTier tier, RoomType preferredRoomType) {
+        if (compareRoomType(preferredRoomType, tier.getHighestEligibleRoomType()) <= 0) {
+            return preferredRoomType;
         }
-        return null;
+        return tier.getHighestEligibleRoomType();
     }
 
     private void sortAllocatedByTierThenRoom(VipAllocationRequest[] report) {
@@ -214,10 +227,30 @@ public class VipRoomAllocationControl {
     }
 
     private int compareRoom(Room first, Room second) {
-        int typeCompare = first.getRoomType().compareTo(second.getRoomType());
+        int typeCompare = compareRoomType(first.getRoomType(), second.getRoomType());
         if (typeCompare != 0) {
             return typeCompare;
         }
         return first.getRoomNo().compareTo(second.getRoomNo());
+    }
+
+    private int compareRoomType(RoomType first, RoomType second) {
+        return getRoomTypeRank(first) - getRoomTypeRank(second);
+    }
+
+    private int getRoomTypeRank(RoomType roomType) {
+        switch (roomType) {
+            case PRESIDENTIAL:
+                return 5;
+            case EXECUTIVE:
+                return 4;
+            case SUITE:
+                return 3;
+            case DELUXE:
+                return 2;
+            case STANDARD:
+            default:
+                return 1;
+        }
     }
 }
