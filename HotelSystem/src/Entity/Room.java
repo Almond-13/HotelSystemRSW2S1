@@ -2,10 +2,11 @@ package entity;
 
 public class Room {
     private String roomNo;
-    private String roomType;
-    private String currentStatus;
+    private RoomType roomType;
+    private RoomStatus currentStatus;
     private String occupancyStatus;
 
+<<<<<<< HEAD
     public Room() {
         this.roomNo = "";
         this.roomType = "";
@@ -66,6 +67,35 @@ public class Room {
         occupancyStatus = "Unavailable";
     }
     }
+=======
+    public Room(String roomNo, RoomType roomType){
+        this.roomNo = roomNo;
+        this.roomType = roomType;
+        this.currentStatus = RoomStatus.CLEAN;
+        this.occupancyStatus="Available";
+    }
+
+    public String getRoomNo() { return roomNo; }
+    public RoomType getRoomType() { return roomType; }
+    public RoomStatus getCurrentStatus() { return currentStatus; }
+    public String getOccupancyStatus() { return occupancyStatus; }
+    public Guest getCGuest() {return CGuest;}
+
+    public void setCGuest(Guest CGuest) {this.CGuest = CGuest;}
+    public void setCurrentStatus(RoomStatus currentStatus) { this.currentStatus = currentStatus; }
+    public void setOccupancyStatus(String OccupancyStatus) { this.occupancyStatus = OccupancyStatus; }
+    public void updateOStatus() {
+        if (currentStatus == RoomStatus.CLEAN) {
+            occupancyStatus = "Available";
+        } else {
+            occupancyStatus = "Unavailable";
+        }  
+    }
+
+    public boolean isBookable() {
+    return occupancyStatus.equals("Available")
+        && currentStatus == RoomStatus.CLEAN;}
+>>>>>>> VIP-Room
 
     @Override
     public String toString() {

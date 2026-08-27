@@ -750,6 +750,14 @@ public class WIRegistrationControl {
             System.out.println("Invalid Room Number.");
             System.out.println("Please enter a Room Number that is currently Checked In.");
         }
+<<<<<<< HEAD
+=======
+        Booking booking = selectedBooking;
+        booking.setStatus("Checked Out");
+        Room room = booking.getRoom();
+        room.setCurrentStatus(RoomStatus.DIRTY);
+        room.updateOStatus();
+>>>>>>> VIP-Room
 
         // Generate Check-Out Time
         LocalDateTime checkOutDate = LocalDateTime.now();
