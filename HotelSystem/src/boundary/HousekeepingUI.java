@@ -1,7 +1,7 @@
 package boundary;
 
 import control.HousekeepingManager;
-import entity.Room;
+import entity.*;
 import dao.RoomDAO;
 import java.util.Scanner;
 
@@ -10,8 +10,8 @@ public class HousekeepingUI {
     private HousekeepingManager manager;
     private Scanner sc;
 
-    public HousekeepingUI(Scanner sc, RoomDAO roomDAO) {
-        manager = new HousekeepingManager(roomDAO.getRooms());
+    public HousekeepingUI(Scanner sc, HousekeepingManager manager) {
+        this.manager = manager;
         this.sc = sc;
     }
 
@@ -31,11 +31,11 @@ public class HousekeepingUI {
                 case 1:
                     viewAllFlow();
                     break;
-                case 2:
-                    System.out.print("\nEnter status to filter: ");
-                    String filter = sc.nextLine().trim();
+                  case 2:
+                    String statusFilter = readValidValue("\nEnter status to filter: ", HousekeepingManager.getValidStatuses());
+                    String typeFilter = readValidValue("Enter room type to filter: ", manager.getDistinctRoomTypes());
                     System.out.println();
-                    manager.generateRoomStatusReport(filter);
+                    manager.generateRoomStatusReport(statusFilter, typeFilter);
                     pauseForUser();
                     break;
                 case 3:
@@ -72,7 +72,7 @@ public class HousekeepingUI {
         int subChoice;
         do {
             System.out.println();
-            manager.generateRoomStatusReport("ALL");
+            manager.generateRoomStatusReport("ALL", "ALL");
             System.out.println();
             System.out.printf("%-30s %s%n", "[1] Update Room Status", "[2] Rollback Room Status");
             System.out.printf("%-30s %s%n", "[3] View Room Status History", "[4] Back To Main Menu");
@@ -143,13 +143,38 @@ public class HousekeepingUI {
 
     private void rollbackFlow() {
         System.out.println("=== ROLLBACK ROOM STATUS ===\n");
+        String roomNo = readExistingRoomNo("Enter room number to rollback (e.g. 101): ");
+
+        String currentStatus = manager.getCurrentStatus(roomNo);
+
+        System.out.println();
+        if (currentStatus.equalsIgnoreCase("Dirty")) {
+            System.out.println("Room " + roomNo + " is at 'Dirty' - the start of this cycle, nothing to roll back to.");
+            return;
+        }
+
+        String previousStatus = manager.getPreviousStatus(roomNo);
+        if (previousStatus == null) {
+            System.out.println("Room " + roomNo + " has no earlier status to roll back to.");
+            return;
+        }
+
         while (true) {
-            String roomNo = readExistingRoomNo("Enter room number to rollback (e.g. 101): ");
+            System.out.println("Room:             " + roomNo);
+            System.out.println("Current status:   " + currentStatus);
+            System.out.println("Rollback to:      " + previousStatus);
+            System.out.println();
+            System.out.println(" 1. Confirm rollback");
+            System.out.println(" 0. Cancel");
+            int confirm = readMenuChoice(0, 1);
+            if (confirm == 0) {
+                return;
+            }
 
             boolean success = manager.rollbackStatus(roomNo);
             System.out.println();
             if (success) {
-                System.out.println("[OK] Room " + roomNo + " rolled back successfully.");
+                System.out.println("[OK] Room " + roomNo + " rolled back to '" + previousStatus + "'.");
                 return;
             } else {
                 System.out.println("[!] " + manager.getLastError());
@@ -216,6 +241,27 @@ public class HousekeepingUI {
                 continue;
             }
             return roomNo;
+        }
+    }
+    
+    private String readValidValue(String prompt, String[] validValues) {
+        while (true) {
+            System.out.print(prompt);
+            String value = sc.nextLine().trim();
+            if (value.equalsIgnoreCase("ALL")) {
+                return value;
+            }
+            for (String valid : validValues) {
+                if (valid.equalsIgnoreCase(value)) {
+                    return value;
+                }
+            }
+            System.out.print("[!] Invalid value. Valid options: ALL, ");
+            for (int i = 0; i < validValues.length; i++) {
+                System.out.print(validValues[i]);
+                if (i < validValues.length - 1) System.out.print(", ");
+            }
+            System.out.println();
         }
     }
 }

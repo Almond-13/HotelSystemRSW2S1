@@ -4,16 +4,19 @@ import java.util.Scanner;
 
 import boundary.HousekeepingUI;
 import boundary.VIPUI;
+import boundary.LoyaltyRewardsUI;
 import boundary.WIRegistrationUI;
+import control.HousekeepingManager;
 import dao.RoomDAO;
 
 public class Main {
     public static void main(String[] args) {
         Scanner input = new Scanner(System.in);
         RoomDAO roomDAO = new RoomDAO();
-        WIRegistrationUI WIRUI = new WIRegistrationUI(roomDAO);
         VIPUI VIPUI = new VIPUI(input, roomDAO);
-        HousekeepingUI HKUI = new HousekeepingUI(input, roomDAO);
+        HousekeepingManager hkManager = new HousekeepingManager(roomDAO.getRooms());
+        WIRegistrationUI WIRUI = new WIRegistrationUI(input, roomDAO, hkManager);
+        HousekeepingUI HKUI = new HousekeepingUI(input, hkManager);
 
         int choice;
         do {
@@ -24,7 +27,7 @@ public class Main {
             System.out.println("4. Loyalty and Rewards");
             System.out.println("0. Exit");
 
-            //Validation of Main Menu Choice
+            // Validation of Main Menu Choice
             while (true) {
                 System.out.print("\nEnter Your Choice (0 for Exit): ");
                 String inputChoice = input.nextLine().trim();
@@ -52,7 +55,8 @@ public class Main {
                     HKUI.run();
                     break;
                 case 4:
-                    System.out.println("Loyalty and Rewards module is not available yet.");
+                    LoyaltyRewardsUI loyaltyUI = new LoyaltyRewardsUI(input);
+                    loyaltyUI.showMenu();
                     break;
                 case 0:
                     System.out.println("Exit System...");
