@@ -750,15 +750,6 @@ public class WIRegistrationControl {
             System.out.println("Invalid Room Number.");
             System.out.println("Please enter a Room Number that is currently Checked In.");
         }
-<<<<<<< HEAD
-=======
-        Booking booking = selectedBooking;
-        booking.setStatus("Checked Out");
-        Room room = booking.getRoom();
-        room.setCurrentStatus(RoomStatus.DIRTY);
-        room.updateOStatus();
->>>>>>> VIP-Room
-
         // Generate Check-Out Time
         LocalDateTime checkOutDate = LocalDateTime.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
@@ -886,7 +877,7 @@ public class WIRegistrationControl {
                     || booking.getStatus().equalsIgnoreCase(statusFilter);
 
             boolean roomTypeMatch = roomTypeFilter.equals("All")
-                    || booking.getRoom().getRoomType().equalsIgnoreCase(roomTypeFilter);
+                    || booking.getRoom().getRoomType().toString().equalsIgnoreCase(roomTypeFilter);
 
             boolean searchMatch = keyword.isEmpty()
                     || booking.getBookingID().equalsIgnoreCase(keyword)
@@ -1168,7 +1159,7 @@ public class WIRegistrationControl {
             Booking booking = book.get(i);
             boolean roomTypeMatch = roomTypeFilter.equals("All") || booking.getRoom()
                     .getRoomType()
-                    .equalsIgnoreCase(roomTypeFilter);
+                    .toString().equalsIgnoreCase(roomTypeFilter);
             boolean statusMatch = statusFilter.equals("All") || booking.getStatus()
                     .equalsIgnoreCase(statusFilter);
             boolean searchMatch = keyword.isEmpty() || booking.getGuest()
@@ -1296,10 +1287,10 @@ public class WIRegistrationControl {
             for (int i = 1; i < remaining.size(); i++) {
                 String currentType = remaining.get(i)
                         .getRoom()
-                        .getRoomType();
+                    .getRoomType().toString();
                 String minType = remaining.get(minIndex)
                         .getRoom()
-                        .getRoomType();
+                    .getRoomType().toString();
                 if (currentType.compareToIgnoreCase(minType) < 0) {
                     minIndex = i;
                 }

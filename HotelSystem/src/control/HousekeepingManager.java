@@ -4,6 +4,7 @@ import entity.Room;
 import entity.HousekeepingLog;
 import entity.StatusRecord;
 import entity.RoomStatus;
+import entity.RoomType;
 import adt.LinkedStack;
 import adt.ArrayList;
 
@@ -104,22 +105,18 @@ public class HousekeepingManager {
             return false;
         }
 
-<<<<<<< HEAD
-        log.getHistory().push(new StatusRecord(newStatus, staffId));
-        log.getRoom().setCurrentStatus(newStatus);
+    log.getHistory().push(new StatusRecord(requestedStatus, staffId));
+    log.getRoom().setCurrentStatus(requestedStatus);
         log.getRoom().updateOStatus();
-=======
-        log.getHistory().push(new StatusRecord(requestedStatus, staffId));
-        log.getRoom().setCurrentStatus(requestedStatus);
->>>>>>> VIP-Room
         return true;
     }
     
     public void recordCheckoutDirty(String roomNo, String staffId) {
         HousekeepingLog log = findLog(roomNo);
         if (log != null) {
-            log.getHistory().push(new StatusRecord("Dirty", staffId));
-            log.getRoom().setCurrentStatus("Dirty");
+            log.getHistory().push(new StatusRecord(RoomStatus.DIRTY, staffId));
+            log.getRoom().setCurrentStatus(RoomStatus.DIRTY);
+            log.getRoom().updateOStatus();
         }
     }
     
@@ -129,7 +126,7 @@ public class HousekeepingManager {
         StatusRecord top = log.getHistory().pop();
         StatusRecord previous = log.getHistory().peek();
         log.getHistory().push(top);
-        return previous.getStatus();
+        return previous.getStatus().toString();
     }
 
     public boolean rollbackStatus(String roomNo) {
@@ -139,8 +136,8 @@ public class HousekeepingManager {
             return false;
         }
 
-        String currentStatus = log.getRoom().getCurrentStatus();
-        if (currentStatus.equalsIgnoreCase("Dirty")) {
+        RoomStatus currentStatus = log.getRoom().getCurrentStatus();
+        if (currentStatus == RoomStatus.DIRTY) {
             lastError = "Room '" + roomNo + "' is at 'Dirty' - the start of this cycle, nothing to roll back to.";
             return false;
         }
@@ -153,6 +150,7 @@ public class HousekeepingManager {
         log.getHistory().pop();
         StatusRecord previous = log.getHistory().peek();
         log.getRoom().setCurrentStatus(previous.getStatus());
+        log.getRoom().updateOStatus();
         log.incrementRollbackCount();
         return true;
     }
@@ -207,16 +205,11 @@ public class HousekeepingManager {
         HousekeepingLog[] filtered = new HousekeepingLog[logCount];
         int fCount = 0;
         for (int i = 0; i < logCount; i++) {
-<<<<<<< HEAD
-            String status = logs[i].getRoom().getCurrentStatus();
-            String type = logs[i].getRoom().getRoomType();
-            boolean statusMatch = statusFilter.equalsIgnoreCase("ALL") || status.equalsIgnoreCase(statusFilter);
-            boolean typeMatch = typeFilter.equalsIgnoreCase("ALL") || type.equalsIgnoreCase(typeFilter);
-            if (statusMatch && typeMatch) {
-=======
             RoomStatus status = logs[i].getRoom().getCurrentStatus();
-            if (statusFilter.equalsIgnoreCase("ALL") || status.toString().equalsIgnoreCase(statusFilter)) {
->>>>>>> VIP-Room
+            RoomType type = logs[i].getRoom().getRoomType();
+            boolean statusMatch = statusFilter.equalsIgnoreCase("ALL") || status.toString().equalsIgnoreCase(statusFilter);
+            boolean typeMatch = typeFilter.equalsIgnoreCase("ALL") || type.toString().equalsIgnoreCase(typeFilter);
+            if (statusMatch && typeMatch) {
                 filtered[fCount++] = logs[i];
             }
         }

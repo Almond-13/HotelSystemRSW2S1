@@ -24,7 +24,6 @@ public class RoomDAO {
 
         try (BufferedReader br = new BufferedReader(new FileReader(roomData))) {
 
-<<<<<<< HEAD
             String line;
 
             while ((line = br.readLine()) != null) {
@@ -36,25 +35,15 @@ public class RoomDAO {
                 String[] data = line.split("\\|");
 
                 String roomNo = data[0].trim();
-                String roomType = data[1].trim();
+                RoomType roomType = RoomType.fromDisplayName(data[1].trim());
 
                 rooms.add(new Room(roomNo, roomType));
             }
 
-        } catch (IOException e) {
+        } catch (IOException | IllegalArgumentException e) {
 
             System.out.println("Error reading Room.txt: " + e.getMessage());
         }
-=======
-        rooms.add(new Room("101", RoomType.STANDARD));
-        rooms.add(new Room("102", RoomType.STANDARD));
-        rooms.add(new Room("201", RoomType.DELUXE));
-        rooms.add(new Room("301", RoomType.SUITE));
-        rooms.add(new Room("302", RoomType.SUITE));
-        rooms.add(new Room("303", RoomType.SUITE));
-        rooms.add(new Room("304", RoomType.SUITE));
-        
->>>>>>> VIP-Room
     }
 
     public ArrayList<Room> getRooms() {
