@@ -35,7 +35,7 @@ public class WIRegistrationUI {
             System.out.println("5. Check In");
             System.out.println("6. Check Out");
             System.out.println("7. Booking Report");
-            System.out.println("8. Room Occupied Report");
+            System.out.println("8. Walk-In Registration Report");
             System.out.println("0. Back to Main Menu");
 
             while (true) {
