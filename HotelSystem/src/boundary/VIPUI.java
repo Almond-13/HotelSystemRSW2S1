@@ -53,19 +53,13 @@ public class VIPUI {
                     cancelVipRequest();
                     break;
                 case 7:
-                    displayMemberReport();
-                    break;
-                case 8:
                     displayWaitingReport();
                     break;
-                case 9:
+                case 8:
                     displayAllocatedReport();
                     break;
-                case 10:
+                case 9:
                     displayReadyRoomsReport();
-                    break;
-                case 11:
-                    displayAllocationSummaryReport();
                     break;
                 case 0:
                     System.out.println("Returning to Main Menu...");
@@ -85,21 +79,20 @@ public class VIPUI {
         System.out.println("4. View Next VIP Guest");
         System.out.println("5. Search VIP Room Request");
         System.out.println("6. Cancel VIP Room Request");
-        System.out.println("7. Report: Loyalty Tier Members");
-        System.out.println("8. Report: VIP Waiting Queue");
-        System.out.println("9. Report: Allocated VIP Rooms");
-        System.out.println("10. Report: Ready Rooms");
-        System.out.println("11. Report: VIP Allocation Summary");
+        System.out.println("7. Report: VIP Waiting Queue");
+        System.out.println("8. Report: VIP Allocated Rooms");
+        System.out.println("9. View Ready Rooms");
         System.out.println("0. Back to Main Menu");
     }
 
     private void registerLoyaltyTierMember() {
         String guestName = readRequiredString("Guest name: ");
+        String icPassportNo = readIcPassportNo();
         String phoneNumber = readPhoneNumber();
         printTierThresholds();
         int points = readNonNegativeInt("Historical loyalty points: ");
 
-        LoyaltyTierMember member = control.registerLoyaltyTierMember(guestName, phoneNumber, points);
+        LoyaltyTierMember member = control.registerLoyaltyTierMember(guestName, icPassportNo, phoneNumber, points);
         if (member == null) {
             System.out.println("Unable to register member. Member storage is full.");
             return;
@@ -150,7 +143,8 @@ public class VIPUI {
         Booking booking = walkInControl.createVipAssignedBooking(
                 allocated.getGuestProfile().getConfirmationNumber(),
                 allocated.getGuestProfile().getGuestName(),
-                getMemberPhoneNumber(allocated.getGuestProfile().getGuestName()),
+                allocated.getGuestProfile().getIcPassportNo(),
+                allocated.getGuestProfile().getPhoneNumber(),
                 allocated.getAllocatedRoom());
 
         if (booking == null) {
@@ -161,16 +155,6 @@ public class VIPUI {
         System.out.println("Walk-in booking record created for check-in.");
         System.out.println("Booking ID: " + booking.getBookingID());
         System.out.println("Guest ID  : " + booking.getGuest().getGuestID());
-    }
-
-    private String getMemberPhoneNumber(String guestName) {
-        LoyaltyTierMember[] members = control.getMemberReport();
-        for (int i = 0; i < members.length; i++) {
-            if (members[i].getGuestName().equalsIgnoreCase(guestName)) {
-                return members[i].getPhoneNumber();
-            }
-        }
-        return "0000000000";
     }
 
     private void displayNextVip() {
@@ -218,27 +202,56 @@ public class VIPUI {
     }
 
     private void displayWaitingReport() {
-        System.out.println("\nVIP Waiting Queue Report");
-        VipAllocationRequest[] report = control.getWaitingReport();
+        printReportHeader("VIP WAITING QUEUE REPORT");
+        VipAllocationRequest[] report = filterAndSortRequestReport(control.getWaitingReport(), false);
         if (report.length == 0) {
-            System.out.println("No waiting VIP requests.");
+            System.out.println("No waiting VIP requests match the selected filters.");
+            printLine();
             return;
         }
+        System.out.printf("%-5s %-10s %-20s %-12s %-10s %-15s %-10s%n",
+                "No.", "Request", "Guest Name", "Tier", "Points", "Preferred Room", "Status");
+        printLine();
         for (int i = 0; i < report.length; i++) {
-            System.out.println((i + 1) + ". " + report[i]);
+            System.out.printf("%-5d %-10s %-20s %-12s %-10d %-15s %-10s%n",
+                    i + 1,
+                    report[i].getGuestProfile().getConfirmationNumber(),
+                    report[i].getGuestProfile().getGuestName(),
+                    report[i].getGuestProfile().getLoyaltyTier(),
+                    report[i].getGuestProfile().getRewardPoints(),
+                    report[i].getPreferredRoomType(),
+                    "Waiting");
         }
+        printLine();
+        System.out.println("Total waiting VIP requests: " + report.length);
+        printLine();
     }
 
     private void displayAllocatedReport() {
-        System.out.println("\nAllocated VIP Rooms Report");
-        VipAllocationRequest[] report = control.getAllocatedReport();
+        printReportHeader("VIP ALLOCATED ROOMS REPORT");
+        VipAllocationRequest[] report = filterAndSortRequestReport(control.getAllocatedReport(), true);
         if (report.length == 0) {
-            System.out.println("No VIP rooms allocated yet.");
+            System.out.println("No allocated VIP rooms match the selected filters.");
+            printLine();
             return;
         }
+        System.out.printf("%-5s %-10s %-20s %-12s %-10s %-12s %-12s%n",
+                "No.", "Request", "Guest Name", "Tier", "Room No", "Room Type", "Status");
+        printLine();
         for (int i = 0; i < report.length; i++) {
-            System.out.println((i + 1) + ". " + report[i]);
+            Room room = report[i].getAllocatedRoom();
+            System.out.printf("%-5d %-10s %-20s %-12s %-10s %-12s %-12s%n",
+                    i + 1,
+                    report[i].getGuestProfile().getConfirmationNumber(),
+                    report[i].getGuestProfile().getGuestName(),
+                    report[i].getGuestProfile().getLoyaltyTier(),
+                    room == null ? "-" : room.getRoomNo(),
+                    room == null ? "-" : room.getRoomType(),
+                    "Allocated");
         }
+        printLine();
+        System.out.println("Total allocated VIP rooms: " + report.length);
+        printLine();
     }
 
     private void displayMemberReport() {
@@ -279,6 +292,211 @@ public class VIPUI {
         System.out.println("Gold     : " + control.countWaitingByTier(LoyaltyTier.GOLD));
         System.out.println("Silver   : " + control.countWaitingByTier(LoyaltyTier.SILVER));
         System.out.println("Bronze   : " + control.countWaitingByTier(LoyaltyTier.BRONZE));
+    }
+
+    private void printReportHeader(String title) {
+        printLine();
+        System.out.println(centerText(title, 86));
+        printLine();
+    }
+
+    private void printLine() {
+        System.out.println("--------------------------------------------------------------------------------------");
+    }
+
+    private String centerText(String text, int width) {
+        if (text.length() >= width) {
+            return text;
+        }
+        int padding = (width - text.length()) / 2;
+        String result = "";
+        for (int i = 0; i < padding; i++) {
+            result += " ";
+        }
+        return result + text;
+    }
+
+    private VipAllocationRequest[] filterAndSortRequestReport(VipAllocationRequest[] source, boolean allocatedReport) {
+        LoyaltyTier tierFilter = readTierFilter();
+        RoomType roomTypeFilter = readRoomTypeFilter();
+        String keyword = readString("Search VIP Request ID / Guest Name / Room No (press Enter for all): ");
+        int sortChoice = readRequestReportSortChoice(allocatedReport);
+
+        int matchCount = 0;
+        for (int i = 0; i < source.length; i++) {
+            if (matchesRequestReportFilter(source[i], tierFilter, roomTypeFilter, keyword, allocatedReport)) {
+                matchCount++;
+            }
+        }
+
+        VipAllocationRequest[] filtered = new VipAllocationRequest[matchCount];
+        int index = 0;
+        for (int i = 0; i < source.length; i++) {
+            if (matchesRequestReportFilter(source[i], tierFilter, roomTypeFilter, keyword, allocatedReport)) {
+                filtered[index++] = source[i];
+            }
+        }
+
+        sortRequestReport(filtered, sortChoice);
+        printRequestReportCriteria(tierFilter, roomTypeFilter, keyword, sortChoice, allocatedReport);
+        return filtered;
+    }
+
+    private LoyaltyTier readTierFilter() {
+        System.out.println("\nSelect Loyalty Tier Filter");
+        System.out.println("0. All");
+        System.out.println("1. Bronze");
+        System.out.println("2. Silver");
+        System.out.println("3. Gold");
+        System.out.println("4. Platinum");
+        while (true) {
+            int choice = readInt("Tier filter: ");
+            switch (choice) {
+                case 0:
+                    return null;
+                case 1:
+                    return LoyaltyTier.BRONZE;
+                case 2:
+                    return LoyaltyTier.SILVER;
+                case 3:
+                    return LoyaltyTier.GOLD;
+                case 4:
+                    return LoyaltyTier.PLATINUM;
+                default:
+                    System.out.println("Invalid tier filter. Please enter 0 to 4.");
+                    break;
+            }
+        }
+    }
+
+    private RoomType readRoomTypeFilter() {
+        System.out.println("\nSelect Room Type Filter");
+        System.out.println("0. All");
+        System.out.println("1. Standard");
+        System.out.println("2. Deluxe");
+        System.out.println("3. Suite");
+        System.out.println("4. Executive");
+        System.out.println("5. Presidential");
+        while (true) {
+            int choice = readInt("Room type filter: ");
+            switch (choice) {
+                case 0:
+                    return null;
+                case 1:
+                    return RoomType.STANDARD;
+                case 2:
+                    return RoomType.DELUXE;
+                case 3:
+                    return RoomType.SUITE;
+                case 4:
+                    return RoomType.EXECUTIVE;
+                case 5:
+                    return RoomType.PRESIDENTIAL;
+                default:
+                    System.out.println("Invalid room type filter. Please enter 0 to 5.");
+                    break;
+            }
+        }
+    }
+
+    private int readRequestReportSortChoice(boolean allocatedReport) {
+        System.out.println("\nSelect Sorting Method");
+        System.out.println("1. VIP Request ID");
+        System.out.println("2. Guest Name");
+        System.out.println("3. Loyalty Tier Priority");
+        System.out.println(allocatedReport ? "4. Allocated Room No" : "4. Preferred Room Type");
+        while (true) {
+            int choice = readInt("Sort by: ");
+            if (choice >= 1 && choice <= 4) {
+                return choice;
+            }
+            System.out.println("Invalid sorting method. Please enter 1 to 4.");
+        }
+    }
+
+    private boolean matchesRequestReportFilter(VipAllocationRequest request, LoyaltyTier tierFilter,
+            RoomType roomTypeFilter, String keyword, boolean allocatedReport) {
+        boolean tierMatch = tierFilter == null || request.getGuestProfile().getLoyaltyTier() == tierFilter;
+        RoomType reportRoomType = getReportRoomType(request, allocatedReport);
+        boolean roomTypeMatch = roomTypeFilter == null || reportRoomType == roomTypeFilter;
+        boolean keywordMatch = keyword == null || keyword.trim().isEmpty()
+                || request.getGuestProfile().getConfirmationNumber().equalsIgnoreCase(keyword.trim())
+                || request.getGuestProfile().getGuestName().toLowerCase().contains(keyword.trim().toLowerCase())
+                || (request.getAllocatedRoom() != null
+                        && request.getAllocatedRoom().getRoomNo().equalsIgnoreCase(keyword.trim()));
+        return tierMatch && roomTypeMatch && keywordMatch;
+    }
+
+    private RoomType getReportRoomType(VipAllocationRequest request, boolean allocatedReport) {
+        if (allocatedReport && request.getAllocatedRoom() != null) {
+            return request.getAllocatedRoom().getRoomType();
+        }
+        return request.getPreferredRoomType();
+    }
+
+    private void sortRequestReport(VipAllocationRequest[] report, int sortChoice) {
+        for (int i = 0; i < report.length - 1; i++) {
+            int selectedIndex = i;
+            for (int j = i + 1; j < report.length; j++) {
+                if (compareRequestReport(report[j], report[selectedIndex], sortChoice) < 0) {
+                    selectedIndex = j;
+                }
+            }
+            VipAllocationRequest temp = report[i];
+            report[i] = report[selectedIndex];
+            report[selectedIndex] = temp;
+        }
+    }
+
+    private int compareRequestReport(VipAllocationRequest first, VipAllocationRequest second, int sortChoice) {
+        switch (sortChoice) {
+            case 2:
+                return first.getGuestProfile().getGuestName()
+                        .compareToIgnoreCase(second.getGuestProfile().getGuestName());
+            case 3:
+                return second.getGuestProfile().getLoyaltyTier().getPriority()
+                        - first.getGuestProfile().getLoyaltyTier().getPriority();
+            case 4:
+                return compareRequestRoom(first, second);
+            case 1:
+            default:
+                return first.getGuestProfile().getConfirmationNumber()
+                        .compareToIgnoreCase(second.getGuestProfile().getConfirmationNumber());
+        }
+    }
+
+    private int compareRequestRoom(VipAllocationRequest first, VipAllocationRequest second) {
+        String firstRoom = first.getAllocatedRoom() == null
+                ? String.valueOf(getRoomTypeRank(first.getPreferredRoomType()))
+                : first.getAllocatedRoom().getRoomNo();
+        String secondRoom = second.getAllocatedRoom() == null
+                ? String.valueOf(getRoomTypeRank(second.getPreferredRoomType()))
+                : second.getAllocatedRoom().getRoomNo();
+        return firstRoom.compareToIgnoreCase(secondRoom);
+    }
+
+    private void printRequestReportCriteria(LoyaltyTier tierFilter, RoomType roomTypeFilter, String keyword,
+            int sortChoice, boolean allocatedReport) {
+        System.out.println("\nReport Criteria");
+        System.out.println("Tier Filter     : " + (tierFilter == null ? "All" : tierFilter));
+        System.out.println("Room Type Filter: " + (roomTypeFilter == null ? "All" : roomTypeFilter));
+        System.out.println("Search Keyword  : " + (keyword == null || keyword.trim().isEmpty() ? "All" : keyword));
+        System.out.println("Sorted By       : " + getRequestSortName(sortChoice, allocatedReport));
+        System.out.println();
+    }
+
+    private String getRequestSortName(int sortChoice, boolean allocatedReport) {
+        switch (sortChoice) {
+            case 2:
+                return "Guest Name";
+            case 3:
+                return "Loyalty Tier Priority";
+            case 4:
+                return allocatedReport ? "Allocated Room No" : "Preferred Room Type";
+            case 1:
+            default:
+                return "VIP Request ID";
+        }
     }
 
     private RoomType readRoomType(LoyaltyTier tier) {
@@ -395,6 +613,16 @@ public class VIPUI {
         }
     }
 
+    private String readIcPassportNo() {
+        while (true) {
+            String icPassportNo = readRequiredString("IC / Passport No: ");
+            if (icPassportNo.length() >= 8 && icPassportNo.length() <= 12) {
+                return icPassportNo;
+            }
+            System.out.println("IC / Passport No. must be 8-12 characters.");
+        }
+    }
+
     private String readConfirmationNumber() {
         while (true) {
             String confirmationNumber = readString("VIP Request ID (e.g. VIP001): ").toUpperCase();
@@ -421,9 +649,9 @@ public class VIPUI {
     }
 
     private void seedVipRequests() {
-        control.registerLoyaltyTierMember("Tan Mei Ling", "0123456789", 4300);
-        control.registerLoyaltyTierMember("Jason Lim", "0134567891", 5200);
-        control.registerLoyaltyTierMember("Nur Aisyah", "0145678912", 2400);
+        control.registerLoyaltyTierMember("Tan Mei Ling", "A12345678", "0123456789", 4300);
+        control.registerLoyaltyTierMember("Jason Lim", "B23456789", "0134567891", 5200);
+        control.registerLoyaltyTierMember("Nur Aisyah", "C34567890", "0145678912", 2400);
         control.addVipRequest("VIP001", "M001", RoomType.SUITE);
         control.addVipRequest("VIP002", "M002", RoomType.SUITE);
         control.addVipRequest("VIP003", "M003", RoomType.DELUXE);

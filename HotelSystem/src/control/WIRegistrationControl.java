@@ -52,7 +52,8 @@ public class WIRegistrationControl {
         return lastError;
     }
 
-    public Booking createVipAssignedBooking(String vipRequestId, String guestName, String phoneNumber, Room allocatedRoom) {
+    public Booking createVipAssignedBooking(String vipRequestId, String guestName, String icPassportNo,
+            String phoneNumber, Room allocatedRoom) {
         lastError = "";
 
         if (vipRequestId == null || vipRequestId.trim().isEmpty()) {
@@ -61,6 +62,10 @@ public class WIRegistrationControl {
         }
         if (guestName == null || guestName.trim().isEmpty()) {
             lastError = "Guest name cannot be empty.";
+            return null;
+        }
+        if (icPassportNo == null || icPassportNo.trim().isEmpty()) {
+            lastError = "IC / Passport No. cannot be empty.";
             return null;
         }
         if (phoneNumber == null || phoneNumber.trim().isEmpty()) {
@@ -74,10 +79,6 @@ public class WIRegistrationControl {
 
         for (int i = 0; i < book.size(); i++) {
             Booking existingBooking = book.get(i);
-            if (existingBooking.getGuest().getICPassportNo().equalsIgnoreCase(vipRequestId)) {
-                lastError = "VIP booking record already exists for " + vipRequestId + ".";
-                return null;
-            }
             if (existingBooking.getRoom().getRoomNo().equalsIgnoreCase(allocatedRoom.getRoomNo())
                     && !existingBooking.getStatus().equalsIgnoreCase("Checked Out")) {
                 lastError = "Room " + allocatedRoom.getRoomNo() + " already has an active booking.";
@@ -86,7 +87,7 @@ public class WIRegistrationControl {
         }
 
         String guestId = String.format("G%03d", guestCounter++);
-        Guest guest = new Guest(guestId, guestName, vipRequestId, phoneNumber);
+        Guest guest = new Guest(guestId, guestName, icPassportNo, phoneNumber);
         Booking booking = new Booking(bookingID, guest, allocatedRoom, "", "", "Assigned");
 
         book.add(booking);
@@ -625,22 +626,25 @@ public class WIRegistrationControl {
             return;
         }
 
-        // Search Guest ID
+        // Search by Guest ID or IC / Passport No.
         Booking selectedBooking = null;
 
         while (true) {
-            System.out.print("\nEnter Guest ID for Check In (0 for Exit): ");
-            String guestID = input.nextLine().trim();
+            System.out.print("\nEnter Guest ID or IC / Passport No. for Check In (0 for Exit): ");
+            String guestReference = input.nextLine().trim();
 
-            if (guestID.equals("0")) {
+            if (guestReference.equals("0")) {
                 return;
             }
 
             for (int i = 0; i < book.size(); i++) {
                 Booking booking = book.get(i);
-                if (booking.getGuest()
+                if ((booking.getGuest()
                         .getGuestID()
-                        .equalsIgnoreCase(guestID)
+                        .equalsIgnoreCase(guestReference)
+                        || booking.getGuest()
+                                .getICPassportNo()
+                                .equalsIgnoreCase(guestReference))
                         && booking.getStatus()
                                 .equals("Assigned")) {
                     selectedBooking = booking;
@@ -652,7 +656,7 @@ public class WIRegistrationControl {
                 break;
             }
 
-            System.out.println("No assigned booking found for this Guest ID.");
+            System.out.println("No assigned booking found for this Guest ID or IC / Passport No.");
         }
 
         Guest guest = selectedBooking.getGuest();

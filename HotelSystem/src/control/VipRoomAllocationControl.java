@@ -39,13 +39,13 @@ public class VipRoomAllocationControl {
         nextMemberNumber = 1;
     }
 
-    public LoyaltyTierMember registerLoyaltyTierMember(String guestName, String phoneNumber,
+    public LoyaltyTierMember registerLoyaltyTierMember(String guestName, String icPassportNo, String phoneNumber,
             int historicalRewardPoints) {
         if (memberCount == members.length) {
             return null;
         }
 
-        LoyaltyTierMember member = new LoyaltyTierMember(generateMemberId(), guestName, phoneNumber,
+        LoyaltyTierMember member = new LoyaltyTierMember(generateMemberId(), guestName, icPassportNo, phoneNumber,
                 historicalRewardPoints);
         members[memberCount++] = member;
         return member;
@@ -79,15 +79,21 @@ public class VipRoomAllocationControl {
         if (member == null) {
             return null;
         }
-        return addVipRequest(confirmationNumber, member.getGuestName(),
-                member.getHistoricalRewardPoints(), preferredRoomType);
+        return addVipRequest(confirmationNumber, member.getGuestName(), member.getIcPassportNo(),
+                member.getPhoneNumber(), member.getHistoricalRewardPoints(), preferredRoomType);
     }
 
     public VipAllocationRequest addVipRequest(String confirmationNumber, String guestName,
             int rewardPoints, RoomType preferredRoomType) {
+        return addVipRequest(confirmationNumber, guestName, "", "", rewardPoints, preferredRoomType);
+    }
+
+    public VipAllocationRequest addVipRequest(String confirmationNumber, String guestName, String icPassportNo,
+            String phoneNumber, int rewardPoints, RoomType preferredRoomType) {
         LoyaltyTier tier = LoyaltyTier.fromRewardPoints(rewardPoints);
         RoomType eligibleRoomType = getEligibleRoomType(tier, preferredRoomType);
-        GuestProfile guestProfile = new GuestProfile(confirmationNumber, guestName, tier, rewardPoints);
+        GuestProfile guestProfile = new GuestProfile(confirmationNumber, guestName, icPassportNo, phoneNumber, tier,
+                rewardPoints);
         VipAllocationRequest request = new VipAllocationRequest(guestProfile, eligibleRoomType, nextArrivalSequence++);
         waitingQueue.add(request);
         return request;
