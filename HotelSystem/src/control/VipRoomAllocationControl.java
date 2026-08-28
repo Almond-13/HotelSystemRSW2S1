@@ -118,7 +118,7 @@ public class VipRoomAllocationControl {
         }
 
         request = waitingQueue.removeMax();
-        availableRoom.setOccupancyStatus("Occupied");
+        availableRoom.setOccupancyStatus("Unavailable");
         request.setAllocatedRoom(availableRoom);
         allocatedRequests[allocatedCount++] = request;
         return request;
