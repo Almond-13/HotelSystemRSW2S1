@@ -89,7 +89,7 @@ public class VIPUI {
         String guestName = readRequiredString("Guest name: ");
         String phoneNumber = readPhoneNumber();
         printTierThresholds();
-        int points = readNonNegativeInt("Historical reward points: ");
+        int points = readNonNegativeInt("Historical loyalty points: ");
 
         LoyaltyTierMember member = control.registerLoyaltyTierMember(guestName, phoneNumber, points);
         if (member == null) {
@@ -142,7 +142,7 @@ public class VIPUI {
     }
 
     private void searchVipRequest() {
-        String confirmationNumber = readString("Confirmation number to search: ");
+        String confirmationNumber = readString("VIP Request ID to search: ");
         VipAllocationRequest waitingRequest = control.searchWaitingRequest(confirmationNumber);
         if (waitingRequest != null) {
             System.out.println("Found in waiting queue: " + waitingRequest);
@@ -155,11 +155,11 @@ public class VIPUI {
             return;
         }
 
-        System.out.println("No VIP request found for confirmation number " + confirmationNumber + ".");
+        System.out.println("No VIP request found for VIP Request ID " + confirmationNumber + ".");
     }
 
     private void cancelVipRequest() {
-        String confirmationNumber = readString("Confirmation number to cancel: ");
+        String confirmationNumber = readString("VIP Request ID to cancel: ");
         VipAllocationRequest request = control.searchWaitingRequest(confirmationNumber);
         if (request == null) {
             System.out.println("Only waiting requests can be cancelled. No waiting request found.");
@@ -309,12 +309,12 @@ public class VIPUI {
     }
 
     private void printTierThresholds() {
-        System.out.println("Tier is calculated from historical reward points.");
+        System.out.println("Tier is calculated from historical loyalty points.");
         System.out.println("Bronze   : 0 - 999");
         System.out.println("Silver   : 1000 - 2499");
         System.out.println("Gold     : 2500 - 4999");
         System.out.println("Platinum : 5000 and above");
-        System.out.println("Current stay points are earned after checkout, not before this allocation.");
+        System.out.println("Current stay loyalty points are earned after checkout, not before this allocation.");
     }
 
     private int readInt(String prompt) {
@@ -356,13 +356,13 @@ public class VIPUI {
 
     private String readConfirmationNumber() {
         while (true) {
-            String confirmationNumber = readString("Confirmation number (8 digits): ");
-            if (!confirmationNumber.matches("\\d{8}")) {
-                System.out.println("Confirmation number must be exactly 8 digits.");
+            String confirmationNumber = readString("VIP Request ID (e.g. VIP001): ").toUpperCase();
+            if (!confirmationNumber.matches("VIP\\d{3}")) {
+                System.out.println("VIP Request ID must follow the format VIP001.");
                 continue;
             }
             if (control.isConfirmationNumberUsed(confirmationNumber)) {
-                System.out.println("Confirmation number already exists.");
+                System.out.println("VIP Request ID already exists.");
                 continue;
             }
             return confirmationNumber;
@@ -383,8 +383,8 @@ public class VIPUI {
         control.registerLoyaltyTierMember("Tan Mei Ling", "0123456789", 4300);
         control.registerLoyaltyTierMember("Jason Lim", "0134567891", 5200);
         control.registerLoyaltyTierMember("Nur Aisyah", "0145678912", 2400);
-        control.addVipRequest("10000001", "VTM001", RoomType.SUITE);
-        control.addVipRequest("10000002", "VTM002", RoomType.SUITE);
-        control.addVipRequest("10000003", "VTM003", RoomType.DELUXE);
+        control.addVipRequest("VIP001", "M001", RoomType.SUITE);
+        control.addVipRequest("VIP002", "M002", RoomType.SUITE);
+        control.addVipRequest("VIP003", "M003", RoomType.DELUXE);
     }
 }

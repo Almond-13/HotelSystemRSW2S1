@@ -32,6 +32,7 @@ public class GuestProfile {
 
     @Override
     public String toString() {
-        return confirmationNumber + " | " + guestName + " | " + loyaltyTier + " | " + rewardPoints + " pts";
+        return confirmationNumber + " | " + guestName + " | " + loyaltyTier + " | "
+                + rewardPoints + " loyalty points";
     }
 }

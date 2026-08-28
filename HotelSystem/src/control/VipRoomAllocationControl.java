@@ -246,7 +246,7 @@ public class VipRoomAllocationControl {
     }
 
     private String generateMemberId() {
-        return "VTM" + String.format("%03d", nextMemberNumber++);
+        return "M" + String.format("%03d", nextMemberNumber++);
     }
 
     private void sortMembersByTierThenPoints(LoyaltyTierMember[] report) {

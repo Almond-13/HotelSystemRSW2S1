@@ -39,6 +39,6 @@ public class LoyaltyTierMember {
     @Override
     public String toString() {
         return memberId + " | " + guestName + " | " + phoneNumber + " | "
-                + loyaltyTier + " | " + historicalRewardPoints + " pts";
+                + loyaltyTier + " | " + historicalRewardPoints + " loyalty points";
     }
 }
