@@ -4,14 +4,17 @@ package control;
 import entity.Room;
 import entity.HousekeepingLog;
 import entity.StatusRecord;
+import entity.RoomStatus;
+import entity.RoomType;
 import adt.LinkedStack;
 import adt.ArrayList;
 import java.time.format.DateTimeFormatter;
 
 public class HousekeepingManager {
 
-    private static final String[] SEQUENCE = {
-        "Dirty", "Cleaning In Progress", "Inspected", "Clean"
+    private static final RoomStatus[] SEQUENCE = {
+            RoomStatus.DIRTY, RoomStatus.CLEANING_IN_PROGRESS,
+            RoomStatus.INSPECTED, RoomStatus.CLEAN
     };
 
     private HousekeepingLog[] logs;
@@ -34,21 +37,24 @@ public class HousekeepingManager {
         }
     }
 
-    public String getLastError() { return lastError; }
+    public String getLastError() {
+        return lastError;
+    }
 
     // Ensure Log Capacity
     private void ensureCapacity() {
         if (logCount == logs.length) {
             HousekeepingLog[] bigger = new HousekeepingLog[logs.length * 2];
-            for (int i = 0; i < logs.length; i++) bigger[i] = logs[i];
+            for (int i = 0; i < logs.length; i++)
+                bigger[i] = logs[i];
             logs = bigger;
         }
     }
 
-    // Get Index Of Status In Sequence
-    private int indexOfStatus(String status) {
+    private int indexOfStatus(RoomStatus status) {
         for (int i = 0; i < SEQUENCE.length; i++) {
-            if (SEQUENCE[i].equalsIgnoreCase(status)) return i;
+            if (SEQUENCE[i] == status)
+                return i;
         }
         return -1;
     }
@@ -56,30 +62,39 @@ public class HousekeepingManager {
     // Find Room's Housekeeping Log
     private HousekeepingLog findLog(String roomNo) {
         for (int i = 0; i < logCount; i++) {
-            if (logs[i].getRoom().getRoomNo().equalsIgnoreCase(roomNo)) return logs[i];
+            if (logs[i].getRoom().getRoomNo().equalsIgnoreCase(roomNo))
+                return logs[i];
         }
         return null;
     }
 
-    public boolean roomExists(String roomNo) { return findLog(roomNo) != null; }
+    public boolean roomExists(String roomNo) {
+        return findLog(roomNo) != null;
+    }
 
     public String getCurrentStatus(String roomNo) {
         HousekeepingLog log = findLog(roomNo);
-        return (log == null) ? null : log.getRoom().getCurrentStatus();
+        return (log == null) ? null : log.getRoom().getCurrentStatus().toString();
     }
 
     // Get Next Status In Sequence (null if already at final stage)
     public String getNextStatus(String roomNo) {
         HousekeepingLog log = findLog(roomNo);
-        if (log == null) return null;
+        if (log == null)
+            return null;
         int currentIndex = indexOfStatus(log.getRoom().getCurrentStatus());
-        if (currentIndex == -1 || currentIndex == SEQUENCE.length - 1) return null;
-        return SEQUENCE[currentIndex + 1];
+        if (currentIndex == -1 || currentIndex == SEQUENCE.length - 1)
+            return null;
+        return SEQUENCE[currentIndex + 1].toString();
     }
 
-    public static String[] getValidStatuses() { return SEQUENCE.clone(); }
+    public static String[] getValidStatuses() {
+        String[] statuses = new String[SEQUENCE.length];
+        for (int i = 0; i < SEQUENCE.length; i++)
+            statuses[i] = SEQUENCE[i].toString();
+        return statuses;
+    }
 
-    // Register Room Into Housekeeping Log
     public void registerRoom(Room room) {
         ensureCapacity();
         logs[logCount++] = new HousekeepingLog(room);
@@ -93,19 +108,24 @@ public class HousekeepingManager {
             return false;
         }
 
-        // Validate New Status Follows Current Status In Sequence
-        String currentStatus = log.getRoom().getCurrentStatus();
+        RoomStatus currentStatus = log.getRoom().getCurrentStatus();
+        RoomStatus requestedStatus;
+        try {
+            requestedStatus = RoomStatus.fromDisplayName(newStatus);
+        } catch (IllegalArgumentException exception) {
+            requestedStatus = null;
+        }
+
         int currentIndex = indexOfStatus(currentStatus);
-        int newIndex = indexOfStatus(newStatus);
+        int newIndex = requestedStatus == null ? -1 : indexOfStatus(requestedStatus);
 
         if (newIndex == -1 || newIndex != currentIndex + 1) {
             lastError = "Cannot change status from '" + currentStatus + "' to '" + newStatus + "'.";
             return false;
         }
 
-        // Push New Status Onto History And Update Room
-        log.getHistory().push(new StatusRecord(newStatus, staffId));
-        log.getRoom().setCurrentStatus(newStatus);
+        log.getHistory().push(new StatusRecord(requestedStatus, staffId));
+        log.getRoom().setCurrentStatus(requestedStatus);
         log.getRoom().updateOStatus();
         return true;
     }
@@ -114,19 +134,21 @@ public class HousekeepingManager {
     public void recordCheckoutDirty(String roomNo, String staffId) {
         HousekeepingLog log = findLog(roomNo);
         if (log != null) {
-            log.getHistory().push(new StatusRecord("Dirty", staffId));
-            log.getRoom().setCurrentStatus("Dirty");
+            log.getHistory().push(new StatusRecord(RoomStatus.DIRTY, staffId));
+            log.getRoom().setCurrentStatus(RoomStatus.DIRTY);
+            log.getRoom().updateOStatus();
         }
     }
 
     // Preview Previous Status Without Modifying History
     public String getPreviousStatus(String roomNo) {
         HousekeepingLog log = findLog(roomNo);
-        if (log == null || log.getHistory().size() <= 1) return null;
+        if (log == null || log.getHistory().size() <= 1)
+            return null;
         StatusRecord top = log.getHistory().pop();
         StatusRecord previous = log.getHistory().peek();
         log.getHistory().push(top);
-        return previous.getStatus();
+        return previous.getStatus().toString();
     }
 
     // Rollback Status
@@ -137,9 +159,8 @@ public class HousekeepingManager {
             return false;
         }
 
-        // Block Rollback At Dirty (Start Of Cycle, Nothing Earlier To Restore)
-        String currentStatus = log.getRoom().getCurrentStatus();
-        if (currentStatus.equalsIgnoreCase("Dirty")) {
+        RoomStatus currentStatus = log.getRoom().getCurrentStatus();
+        if (currentStatus == RoomStatus.DIRTY) {
             lastError = "Room '" + roomNo + "' is at 'Dirty' - the start of this cycle, nothing to roll back to.";
             return false;
         }
@@ -153,6 +174,7 @@ public class HousekeepingManager {
         log.getHistory().pop();
         StatusRecord previous = log.getHistory().peek();
         log.getRoom().setCurrentStatus(previous.getStatus());
+        log.getRoom().updateOStatus();
         log.incrementRollbackCount();
         return true;
     }
@@ -165,18 +187,18 @@ public class HousekeepingManager {
             return false;
         }
 
-        String currentStatus = log.getRoom().getCurrentStatus();
-        if (!currentStatus.equalsIgnoreCase("Clean")) {
-            lastError = "Room '" + roomNo + "' must be 'Clean' before starting a new cycle (currently '" + currentStatus + "').";
+        RoomStatus currentStatus = log.getRoom().getCurrentStatus();
+        if (currentStatus != RoomStatus.CLEAN) {
+            lastError = "Room '" + roomNo + "' must be 'Clean' before starting a new cycle (currently '" + currentStatus
+                    + "').";
             return false;
         }
 
-        log.getHistory().push(new StatusRecord("Dirty", staffId));
-        log.getRoom().setCurrentStatus("Dirty");
+        log.getHistory().push(new StatusRecord(RoomStatus.DIRTY, staffId));
+        log.getRoom().setCurrentStatus(RoomStatus.DIRTY);
         return true;
     }
 
-    // Print Room Status History (Most Recent First, Non-Destructive)
     public boolean printHistory(String roomNo) {
         HousekeepingLog log = findLog(roomNo);
         if (log == null) {
@@ -220,10 +242,11 @@ public class HousekeepingManager {
         HousekeepingLog[] filtered = new HousekeepingLog[logCount];
         int fCount = 0;
         for (int i = 0; i < logCount; i++) {
-            String status = logs[i].getRoom().getCurrentStatus();
-            String type = logs[i].getRoom().getRoomType();
-            boolean statusMatch = statusFilter.equalsIgnoreCase("ALL") || status.equalsIgnoreCase(statusFilter);
-            boolean typeMatch = typeFilter.equalsIgnoreCase("ALL") || type.equalsIgnoreCase(typeFilter);
+            RoomStatus status = logs[i].getRoom().getCurrentStatus();
+            RoomType type = logs[i].getRoom().getRoomType();
+            boolean statusMatch = statusFilter.equalsIgnoreCase("ALL")
+                    || status.toString().equalsIgnoreCase(statusFilter);
+            boolean typeMatch = typeFilter.equalsIgnoreCase("ALL") || type.toString().equalsIgnoreCase(typeFilter);
             if (statusMatch && typeMatch) {
                 filtered[fCount++] = logs[i];
             }
@@ -262,7 +285,7 @@ public class HousekeepingManager {
         String[] types = new String[logCount];
         int count = 0;
         for (int i = 0; i < logCount; i++) {
-            String type = logs[i].getRoom().getRoomType();
+            String type = logs[i].getRoom().getRoomType().toString();
             boolean found = false;
             for (int j = 0; j < count; j++) {
                 if (types[j].equalsIgnoreCase(type)) {
@@ -275,7 +298,8 @@ public class HousekeepingManager {
             }
         }
         String[] result = new String[count];
-        for (int i = 0; i < count; i++) result[i] = types[i];
+        for (int i = 0; i < count; i++)
+            result[i] = types[i];
         return result;
     }
 

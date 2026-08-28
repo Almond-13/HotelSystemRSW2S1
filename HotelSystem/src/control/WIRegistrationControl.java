@@ -30,7 +30,17 @@ public class WIRegistrationControl {
     public WIRegistrationControl(RoomDAO roomDAO, HousekeepingManager hkManager) {
 
         guestQueue = new CircularArrayQueue<>();
-        input = new Scanner(System.in);
+        this.input = input;
+        rooms = roomDAO.getRooms();
+        book = new ArrayList<>();
+        lastError = "";
+        guestCounter = 1;
+        this.hkManager = hkManager;
+    }
+
+    public WIRegistrationControl(Scanner input, RoomDAO roomDAO, HousekeepingManager hkManager) {
+        this.input = input;
+        guestQueue = new CircularArrayQueue<>();
         rooms = roomDAO.getRooms();
         book = new ArrayList<>();
         lastError = "";
@@ -40,6 +50,50 @@ public class WIRegistrationControl {
 
     public String getLastError() {
         return lastError;
+    }
+
+    public Booking createVipAssignedBooking(String vipRequestId, String guestName, String icPassportNo,
+            String phoneNumber, Room allocatedRoom) {
+        lastError = "";
+
+        if (vipRequestId == null || vipRequestId.trim().isEmpty()) {
+            lastError = "VIP Request ID cannot be empty.";
+            return null;
+        }
+        if (guestName == null || guestName.trim().isEmpty()) {
+            lastError = "Guest name cannot be empty.";
+            return null;
+        }
+        if (icPassportNo == null || icPassportNo.trim().isEmpty()) {
+            lastError = "IC / Passport No. cannot be empty.";
+            return null;
+        }
+        if (phoneNumber == null || phoneNumber.trim().isEmpty()) {
+            lastError = "Phone number cannot be empty.";
+            return null;
+        }
+        if (allocatedRoom == null) {
+            lastError = "Allocated room cannot be empty.";
+            return null;
+        }
+
+        for (int i = 0; i < book.size(); i++) {
+            Booking existingBooking = book.get(i);
+            if (existingBooking.getRoom().getRoomNo().equalsIgnoreCase(allocatedRoom.getRoomNo())
+                    && !existingBooking.getStatus().equalsIgnoreCase("Checked Out")) {
+                lastError = "Room " + allocatedRoom.getRoomNo() + " already has an active booking.";
+                return null;
+            }
+        }
+
+        String guestId = String.format("G%03d", guestCounter++);
+        Guest guest = new Guest(guestId, guestName, icPassportNo, phoneNumber);
+        Booking booking = new Booking(bookingID, guest, allocatedRoom, "", "", "Assigned");
+
+        book.add(booking);
+        allocatedRoom.setOccupancyStatus("Unavailable");
+        bookingID = "B" + String.format("%03d", bookingCount++);
+        return booking;
     }
 
     // ===================================================================
@@ -572,22 +626,25 @@ public class WIRegistrationControl {
             return;
         }
 
-        // Search Guest ID
+        // Search by Guest ID or IC / Passport No.
         Booking selectedBooking = null;
 
         while (true) {
-            System.out.print("\nEnter Guest ID for Check In (0 for Exit): ");
-            String guestID = input.nextLine().trim();
+            System.out.print("\nEnter Guest ID or IC / Passport No. for Check In (0 for Exit): ");
+            String guestReference = input.nextLine().trim();
 
-            if (guestID.equals("0")) {
+            if (guestReference.equals("0")) {
                 return;
             }
 
             for (int i = 0; i < book.size(); i++) {
                 Booking booking = book.get(i);
-                if (booking.getGuest()
+                if ((booking.getGuest()
                         .getGuestID()
-                        .equalsIgnoreCase(guestID)
+                        .equalsIgnoreCase(guestReference)
+                        || booking.getGuest()
+                                .getICPassportNo()
+                                .equalsIgnoreCase(guestReference))
                         && booking.getStatus()
                                 .equals("Assigned")) {
                     selectedBooking = booking;
@@ -599,15 +656,14 @@ public class WIRegistrationControl {
                 break;
             }
 
-            System.out.println("No assigned booking found for this Guest ID.");
+            System.out.println("No assigned booking found for this Guest ID or IC / Passport No.");
         }
 
         Guest guest = selectedBooking.getGuest();
         Room room = selectedBooking.getRoom();
 
         // Check Room Status
-        if (!room.getCurrentStatus()
-                .equals("Clean")) {
+        if (room.getCurrentStatus() != RoomStatus.CLEAN) {
             System.out.println("\nThe assigned room is not ready for check-in yet.");
             System.out.println("Room Status : " + room.getCurrentStatus());
             System.out.print("\nPress Enter to return...");
@@ -740,7 +796,6 @@ public class WIRegistrationControl {
             System.out.println("Invalid Room Number.");
             System.out.println("Please enter a Room Number that is currently Checked In.");
         }
-
         // Generate Check-Out Time
         LocalDateTime checkOutDate = LocalDateTime.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
@@ -868,7 +923,7 @@ public class WIRegistrationControl {
                     || booking.getStatus().equalsIgnoreCase(statusFilter);
 
             boolean roomTypeMatch = roomTypeFilter.equals("All")
-                    || booking.getRoom().getRoomType().equalsIgnoreCase(roomTypeFilter);
+                    || booking.getRoom().getRoomType().toString().equalsIgnoreCase(roomTypeFilter);
 
             boolean searchMatch = keyword.isEmpty()
                     || booking.getBookingID().equalsIgnoreCase(keyword)
@@ -936,43 +991,42 @@ public class WIRegistrationControl {
             sortingMethod = "Room Number";
         }
         System.out.println("Sorted By        : " + sortingMethod);
-        System.out.println("----------------------------------------------------------------------------------------------------------------------------------------");
+        System.out.println("--------------------------------------------------------------------------");
 
         System.out.printf(
-                "%-10s %-12s %-18s %-15s %-12s %-15s %-25s %-12s%n",
+                "%-10s %-12s %-18s %-15s %-12s %-12s %-15s%n",
                 "Guest ID",
                 "Booking ID",
                 "Guest Name",
                 "Room No",
                 "Room Type",
                 "Status",
-                "Check In Date Time",
-                "Check Out Date Time"
-            );
+                "Check In");
 
-        System.out.println("-----------------------------------------------------------------------------------------------------------------------------------------");
+        System.out.println(
+                "--------------------------------------------------------------------------");
 
         // Display Filtering Report
         for (int i = 0; i < filteredBookings.size(); i++) {
 
             Booking booking = filteredBookings.get(i);
             System.out.printf(
-                    "%-10s %-12s %-18s %-15s %-12s %-15s %-25s %-18s%n",
+                    "%-10s %-12s %-18s %-15s %-12s %-15s %-15s%n",
                     booking.getGuest().getGuestID(),
                     booking.getBookingID(),
                     booking.getGuest().getName(),
                     booking.getRoom().getRoomNo(),
                     booking.getRoom().getRoomType(),
                     booking.getStatus(),
-                    booking.getCheckInDate(),
-                    booking.getCheckOutDate()
-                );
+                    booking.getCheckInDate());
         }
         System.out.print("\nPress Enter to return...");
         input.nextLine();
     }
 
+    // ===================================================================
     // Sorting - Booking ID
+    // ===================================================================
     private ArrayList<Booking> sortBookingsByBookingID(
             ArrayList<Booking> source) {
 
@@ -1151,7 +1205,7 @@ public class WIRegistrationControl {
             Booking booking = book.get(i);
             boolean roomTypeMatch = roomTypeFilter.equals("All") || booking.getRoom()
                     .getRoomType()
-                    .equalsIgnoreCase(roomTypeFilter);
+                    .toString().equalsIgnoreCase(roomTypeFilter);
             boolean statusMatch = statusFilter.equals("All") || booking.getStatus()
                     .equalsIgnoreCase(statusFilter);
             boolean searchMatch = keyword.isEmpty() || booking.getGuest()
@@ -1232,24 +1286,26 @@ public class WIRegistrationControl {
         System.out.println("Sorted By        : " + sortingMethod);
         System.out.println("--------------------------------------------------------------------------");
         System.out.printf(
-                "%-10s %-15s %-12s %-20s %-18s%n",
+                "%-10s %-15s %-12s %-20s %-15s %-18s%n",
                 "Room No",
                 "Room Type",
                 "Guest ID",
                 "Guest Name",
-                "Status");
+                "Status",
+                "Check In");
 
         System.out.println("--------------------------------------------------------------------------");
 
         for (int i = 0; i < filteredBookings.size(); i++) {
             Booking booking = filteredBookings.get(i);
             System.out.printf(
-                    "%-10s %-15s %-12s %-20s %-18s%n",
+                    "%-10s %-15s %-12s %-20s %-15s %-18s%n",
                     booking.getRoom().getRoomNo(),
                     booking.getRoom().getRoomType(),
                     booking.getGuest().getGuestID(),
                     booking.getGuest().getName(),
-                    booking.getStatus());
+                    booking.getStatus(),
+                    booking.getCheckInDate());
         }
 
         System.out.println("--------------------------------------------------------------------------");
@@ -1277,10 +1333,10 @@ public class WIRegistrationControl {
             for (int i = 1; i < remaining.size(); i++) {
                 String currentType = remaining.get(i)
                         .getRoom()
-                        .getRoomType();
+                    .getRoomType().toString();
                 String minType = remaining.get(minIndex)
                         .getRoom()
-                        .getRoomType();
+                    .getRoomType().toString();
                 if (currentType.compareToIgnoreCase(minType) < 0) {
                     minIndex = i;
                 }

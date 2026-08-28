@@ -2,70 +2,47 @@ package entity;
 
 public class Room {
     private String roomNo;
-    private String roomType;
-    private String currentStatus;
+    private RoomType roomType;
+    private RoomStatus currentStatus;
     private String occupancyStatus;
+    private Guest CGuest;
 
     public Room() {
         this.roomNo = "";
-        this.roomType = "";
-        this.currentStatus = "Clean";
+        this.roomType = null;
+        this.currentStatus = RoomStatus.CLEAN;
         this.occupancyStatus = "Available";
     }
 
-    public Room(String roomNo, String roomType) {
+    public Room(String roomNo, RoomType roomType) {
         this.roomNo = roomNo;
         this.roomType = roomType;
-        this.currentStatus = "Clean";
+        this.currentStatus = RoomStatus.CLEAN;
         this.occupancyStatus = "Available";
     }
 
-    public String getRoomNo() {
-        return roomNo;
-    }
+    public String getRoomNo() { return roomNo; }
+    public void setRoomNo(String roomNo) { this.roomNo = roomNo; }
+    public RoomType getRoomType() { return roomType; }
+    public void setRoomType(RoomType roomType) { this.roomType = roomType; }
+    public RoomStatus getCurrentStatus() { return currentStatus; }
+    public String getOccupancyStatus() { return occupancyStatus; }
+    public Guest getCGuest() {return CGuest;}
 
-    public void setRoomNo(String roomNo) {
-        this.roomNo = roomNo;
-    }
-
-    public String getRoomType() {
-        return roomType;
-    }
-
-    public void setRoomType(String roomType) {
-        this.roomType = roomType;
-    }
-
-    public String getCurrentStatus() {
-        return currentStatus;
-    }
-
-    public void setCurrentStatus(String currentStatus) {
-        this.currentStatus = currentStatus;
-    }
-
-    public String getOccupancyStatus() {
-        return occupancyStatus;
-    }
-
-    public void setOccupancyStatus(String occupancyStatus) {
-        this.occupancyStatus = occupancyStatus;
+    public void setCGuest(Guest CGuest) {this.CGuest = CGuest;}
+    public void setCurrentStatus(RoomStatus currentStatus) { this.currentStatus = currentStatus; }
+    public void setOccupancyStatus(String OccupancyStatus) { this.occupancyStatus = OccupancyStatus; }
+    public void updateOStatus() {
+        if (currentStatus == RoomStatus.CLEAN) {
+            occupancyStatus = "Available";
+        } else {
+            occupancyStatus = "Unavailable";
+        }  
     }
 
     public boolean isBookable() {
-        return occupancyStatus.equals("Available") && currentStatus.equals("Clean");
-    }
-
-    public void updateOStatus() {
-    if (occupancyStatus.equals("Occupied")) {
-        return;
-    }
-    if (currentStatus.equals("Clean")) {
-        occupancyStatus = "Available";
-    } else {
-        occupancyStatus = "Unavailable";
-    }
-    }
+    return occupancyStatus.equals("Available")
+        && currentStatus == RoomStatus.CLEAN;}
 
     @Override
     public String toString() {
@@ -81,10 +58,10 @@ public class Room {
         if (roomNo == null || roomNo.trim().isEmpty()) {
             return false;
         }
-        if (roomType == null || roomType.trim().isEmpty()) {
+        if (roomType == null) {
             return false;
         }
-        if (currentStatus == null || currentStatus.trim().isEmpty()) {
+        if (currentStatus == null) {
             return false;
         }
         if (occupancyStatus == null || occupancyStatus.trim().isEmpty()) {

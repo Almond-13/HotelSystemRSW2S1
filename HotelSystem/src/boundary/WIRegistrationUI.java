@@ -10,9 +10,17 @@ public class WIRegistrationUI {
     private Scanner input;
     private WIRegistrationControl control;
 
+    public WIRegistrationUI(Scanner input, RoomDAO roomDAO, HousekeepingManager hkManager) {
+        this.input = input;
+        control = new WIRegistrationControl(input, roomDAO, hkManager);
+    }
+
     public WIRegistrationUI(RoomDAO roomDAO, HousekeepingManager hkManager) {
-        input = new Scanner(System.in);
-        control = new WIRegistrationControl(roomDAO, hkManager);
+        this(new Scanner(System.in), roomDAO, hkManager);
+    }
+
+    public WIRegistrationControl getControl() {
+        return control;
     }
 
     public void ShowMenu() {

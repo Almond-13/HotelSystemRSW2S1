@@ -3,8 +3,8 @@ package main;
 import java.util.Scanner;
 
 import boundary.HousekeepingUI;
-import boundary.LoyaltyRewardsUI;
 import boundary.VIPUI;
+import boundary.LoyaltyRewardsUI;
 import boundary.WIRegistrationUI;
 import control.HousekeepingManager;
 import dao.RoomDAO;
@@ -14,8 +14,8 @@ public class Main {
         Scanner input = new Scanner(System.in);
         RoomDAO roomDAO = new RoomDAO();
         HousekeepingManager hkManager = new HousekeepingManager(roomDAO.getRooms());
-        WIRegistrationUI WIRUI = new WIRegistrationUI(roomDAO, hkManager);
-        VIPUI VIPUI = new VIPUI(input, roomDAO);
+        WIRegistrationUI WIRUI = new WIRegistrationUI(input, roomDAO, hkManager);
+        VIPUI VIPUI = new VIPUI(input, roomDAO, WIRUI.getControl());
         HousekeepingUI HKUI = new HousekeepingUI(input, hkManager);
 
         int choice;
@@ -49,7 +49,7 @@ public class Main {
                     WIRUI.ShowMenu();
                     break;
                 case 2:
-                    VIPUI.run();   
+                    VIPUI.run();
                     break;
                 case 3:
                     HKUI.run();
