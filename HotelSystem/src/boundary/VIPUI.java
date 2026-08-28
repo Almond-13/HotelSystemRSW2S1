@@ -1,7 +1,9 @@
 package boundary;
 
+import control.WIRegistrationControl;
 import control.VipRoomAllocationControl;
 import dao.RoomDAO;
+import entity.Booking;
 import entity.LoyaltyTier;
 import entity.LoyaltyTierMember;
 import entity.Room;
@@ -12,9 +14,15 @@ import java.util.Scanner;
 public class VIPUI {
     private Scanner input;
     private VipRoomAllocationControl control;
+    private WIRegistrationControl walkInControl;
 
     public VIPUI(Scanner input, RoomDAO roomDAO) {
+        this(input, roomDAO, null);
+    }
+
+    public VIPUI(Scanner input, RoomDAO roomDAO, WIRegistrationControl walkInControl) {
         this.input = input;
+        this.walkInControl = walkInControl;
         control = new VipRoomAllocationControl(roomDAO);
         seedVipRequests();
     }
@@ -129,7 +137,40 @@ public class VIPUI {
             System.out.println("No waiting VIP or no available clean room.");
         } else {
             System.out.println("Allocated: " + allocated);
+            createWalkInBookingForVip(allocated);
         }
+    }
+
+    private void createWalkInBookingForVip(VipAllocationRequest allocated) {
+        if (walkInControl == null) {
+            System.out.println("Walk-in booking record was not created because Walk-in module is not linked.");
+            return;
+        }
+
+        Booking booking = walkInControl.createVipAssignedBooking(
+                allocated.getGuestProfile().getConfirmationNumber(),
+                allocated.getGuestProfile().getGuestName(),
+                getMemberPhoneNumber(allocated.getGuestProfile().getGuestName()),
+                allocated.getAllocatedRoom());
+
+        if (booking == null) {
+            System.out.println("Walk-in booking record was not created: " + walkInControl.getLastError());
+            return;
+        }
+
+        System.out.println("Walk-in booking record created for check-in.");
+        System.out.println("Booking ID: " + booking.getBookingID());
+        System.out.println("Guest ID  : " + booking.getGuest().getGuestID());
+    }
+
+    private String getMemberPhoneNumber(String guestName) {
+        LoyaltyTierMember[] members = control.getMemberReport();
+        for (int i = 0; i < members.length; i++) {
+            if (members[i].getGuestName().equalsIgnoreCase(guestName)) {
+                return members[i].getPhoneNumber();
+            }
+        }
+        return "0000000000";
     }
 
     private void displayNextVip() {

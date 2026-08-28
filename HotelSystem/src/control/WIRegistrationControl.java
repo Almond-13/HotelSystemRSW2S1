@@ -52,6 +52,49 @@ public class WIRegistrationControl {
         return lastError;
     }
 
+    public Booking createVipAssignedBooking(String vipRequestId, String guestName, String phoneNumber, Room allocatedRoom) {
+        lastError = "";
+
+        if (vipRequestId == null || vipRequestId.trim().isEmpty()) {
+            lastError = "VIP Request ID cannot be empty.";
+            return null;
+        }
+        if (guestName == null || guestName.trim().isEmpty()) {
+            lastError = "Guest name cannot be empty.";
+            return null;
+        }
+        if (phoneNumber == null || phoneNumber.trim().isEmpty()) {
+            lastError = "Phone number cannot be empty.";
+            return null;
+        }
+        if (allocatedRoom == null) {
+            lastError = "Allocated room cannot be empty.";
+            return null;
+        }
+
+        for (int i = 0; i < book.size(); i++) {
+            Booking existingBooking = book.get(i);
+            if (existingBooking.getGuest().getICPassportNo().equalsIgnoreCase(vipRequestId)) {
+                lastError = "VIP booking record already exists for " + vipRequestId + ".";
+                return null;
+            }
+            if (existingBooking.getRoom().getRoomNo().equalsIgnoreCase(allocatedRoom.getRoomNo())
+                    && !existingBooking.getStatus().equalsIgnoreCase("Checked Out")) {
+                lastError = "Room " + allocatedRoom.getRoomNo() + " already has an active booking.";
+                return null;
+            }
+        }
+
+        String guestId = String.format("G%03d", guestCounter++);
+        Guest guest = new Guest(guestId, guestName, vipRequestId, phoneNumber);
+        Booking booking = new Booking(bookingID, guest, allocatedRoom, "", "", "Assigned");
+
+        book.add(booking);
+        allocatedRoom.setOccupancyStatus("Unavailable");
+        bookingID = "B" + String.format("%03d", bookingCount++);
+        return booking;
+    }
+
     // ===================================================================
     // Register Walk-In Guest
     // ===================================================================
@@ -616,8 +659,7 @@ public class WIRegistrationControl {
         Room room = selectedBooking.getRoom();
 
         // Check Room Status
-        if (!room.getCurrentStatus()
-                .equals("Clean")) {
+        if (room.getCurrentStatus() != RoomStatus.CLEAN) {
             System.out.println("\nThe assigned room is not ready for check-in yet.");
             System.out.println("Room Status : " + room.getCurrentStatus());
             System.out.print("\nPress Enter to return...");

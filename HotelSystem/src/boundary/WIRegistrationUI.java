@@ -19,6 +19,10 @@ public class WIRegistrationUI {
         this(new Scanner(System.in), roomDAO, hkManager);
     }
 
+    public WIRegistrationControl getControl() {
+        return control;
+    }
+
     public void ShowMenu() {
         int choice;
 
