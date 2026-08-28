@@ -53,12 +53,15 @@ public class VIPUI {
                     cancelVipRequest();
                     break;
                 case 7:
-                    displayWaitingReport();
+                    displayMemberReport();
                     break;
                 case 8:
-                    displayAllocatedReport();
+                    displayWaitingReport();
                     break;
                 case 9:
+                    displayAllocatedReport();
+                    break;
+                case 10:
                     displayReadyRoomsReport();
                     break;
                 case 0:
@@ -79,15 +82,16 @@ public class VIPUI {
         System.out.println("4. View Next VIP Guest");
         System.out.println("5. Search VIP Room Request");
         System.out.println("6. Cancel VIP Room Request");
-        System.out.println("7. Report: VIP Waiting Queue");
-        System.out.println("8. Report: VIP Allocated Rooms");
-        System.out.println("9. View Ready Rooms");
+        System.out.println("7. View Loyalty Tier Members");
+        System.out.println("8. Report: VIP Waiting Queue");
+        System.out.println("9. Report: VIP Allocated Rooms");
+        System.out.println("10. View Ready Rooms");
         System.out.println("0. Back to Main Menu");
     }
 
     private void registerLoyaltyTierMember() {
         String guestName = readRequiredString("Guest name: ");
-        String icPassportNo = readIcPassportNo();
+        String icPassportNo = readGuestIdentityNo();
         String phoneNumber = readPhoneNumber();
         printTierThresholds();
         int points = readNonNegativeInt("Historical loyalty points: ");
@@ -108,10 +112,13 @@ public class VIPUI {
         }
 
         String confirmationNumber = readConfirmationNumber();
-        String memberId = readRequiredString("Member ID: ");
+        System.out.println("Use the Member ID from option 7: View Loyalty Tier Members.");
+        System.out.println("Example Member ID: M001");
+        String memberId = readRequiredString("Member ID: ").toUpperCase();
         LoyaltyTierMember member = control.findMemberById(memberId);
         if (member == null) {
-            System.out.println("Member ID not found. Please register the loyalty tier member first.");
+            System.out.println("Member ID not found.");
+            System.out.println("Please choose option 7 to view existing members or option 1 to register a new member.");
             return;
         }
 
@@ -255,15 +262,31 @@ public class VIPUI {
     }
 
     private void displayMemberReport() {
-        System.out.println("\nLoyalty Tier Member Report");
+        printReportHeader("LOYALTY TIER MEMBER LIST");
+        System.out.println("Use the Member ID when registering a VIP room request.");
+        printLine();
+        System.out.printf("%-5s %-10s %-20s %-15s %-14s %-12s %-10s%n",
+                "No.", "Member ID", "Guest Name", "IC/Passport", "Phone", "Tier", "Points");
+        printLine();
         LoyaltyTierMember[] report = control.getMemberReport();
         if (report.length == 0) {
             System.out.println("No loyalty tier members registered.");
+            printLine();
             return;
         }
         for (int i = 0; i < report.length; i++) {
-            System.out.println((i + 1) + ". " + report[i]);
+            System.out.printf("%-5d %-10s %-20s %-15s %-14s %-12s %-10d%n",
+                    i + 1,
+                    report[i].getMemberId(),
+                    report[i].getGuestName(),
+                    report[i].getIcPassportNo(),
+                    report[i].getPhoneNumber(),
+                    report[i].getLoyaltyTier(),
+                    report[i].getHistoricalRewardPoints());
         }
+        printLine();
+        System.out.println("Total loyalty tier members: " + report.length);
+        printLine();
     }
 
     private void displayReadyRoomsReport() {
@@ -318,13 +341,12 @@ public class VIPUI {
 
     private VipAllocationRequest[] filterAndSortRequestReport(VipAllocationRequest[] source, boolean allocatedReport) {
         LoyaltyTier tierFilter = readTierFilter();
-        RoomType roomTypeFilter = readRoomTypeFilter();
         String keyword = readString("Search VIP Request ID / Guest Name / Room No (press Enter for all): ");
         int sortChoice = readRequestReportSortChoice(allocatedReport);
 
         int matchCount = 0;
         for (int i = 0; i < source.length; i++) {
-            if (matchesRequestReportFilter(source[i], tierFilter, roomTypeFilter, keyword, allocatedReport)) {
+            if (matchesRequestReportFilter(source[i], tierFilter, keyword)) {
                 matchCount++;
             }
         }
@@ -332,13 +354,13 @@ public class VIPUI {
         VipAllocationRequest[] filtered = new VipAllocationRequest[matchCount];
         int index = 0;
         for (int i = 0; i < source.length; i++) {
-            if (matchesRequestReportFilter(source[i], tierFilter, roomTypeFilter, keyword, allocatedReport)) {
+            if (matchesRequestReportFilter(source[i], tierFilter, keyword)) {
                 filtered[index++] = source[i];
             }
         }
 
         sortRequestReport(filtered, sortChoice);
-        printRequestReportCriteria(tierFilter, roomTypeFilter, keyword, sortChoice, allocatedReport);
+        printRequestReportCriteria(tierFilter, keyword, sortChoice, allocatedReport);
         return filtered;
     }
 
@@ -369,36 +391,6 @@ public class VIPUI {
         }
     }
 
-    private RoomType readRoomTypeFilter() {
-        System.out.println("\nSelect Room Type Filter");
-        System.out.println("0. All");
-        System.out.println("1. Standard");
-        System.out.println("2. Deluxe");
-        System.out.println("3. Suite");
-        System.out.println("4. Executive");
-        System.out.println("5. Presidential");
-        while (true) {
-            int choice = readInt("Room type filter: ");
-            switch (choice) {
-                case 0:
-                    return null;
-                case 1:
-                    return RoomType.STANDARD;
-                case 2:
-                    return RoomType.DELUXE;
-                case 3:
-                    return RoomType.SUITE;
-                case 4:
-                    return RoomType.EXECUTIVE;
-                case 5:
-                    return RoomType.PRESIDENTIAL;
-                default:
-                    System.out.println("Invalid room type filter. Please enter 0 to 5.");
-                    break;
-            }
-        }
-    }
-
     private int readRequestReportSortChoice(boolean allocatedReport) {
         System.out.println("\nSelect Sorting Method");
         System.out.println("1. VIP Request ID");
@@ -414,24 +406,14 @@ public class VIPUI {
         }
     }
 
-    private boolean matchesRequestReportFilter(VipAllocationRequest request, LoyaltyTier tierFilter,
-            RoomType roomTypeFilter, String keyword, boolean allocatedReport) {
+    private boolean matchesRequestReportFilter(VipAllocationRequest request, LoyaltyTier tierFilter, String keyword) {
         boolean tierMatch = tierFilter == null || request.getGuestProfile().getLoyaltyTier() == tierFilter;
-        RoomType reportRoomType = getReportRoomType(request, allocatedReport);
-        boolean roomTypeMatch = roomTypeFilter == null || reportRoomType == roomTypeFilter;
         boolean keywordMatch = keyword == null || keyword.trim().isEmpty()
                 || request.getGuestProfile().getConfirmationNumber().equalsIgnoreCase(keyword.trim())
                 || request.getGuestProfile().getGuestName().toLowerCase().contains(keyword.trim().toLowerCase())
                 || (request.getAllocatedRoom() != null
                         && request.getAllocatedRoom().getRoomNo().equalsIgnoreCase(keyword.trim()));
-        return tierMatch && roomTypeMatch && keywordMatch;
-    }
-
-    private RoomType getReportRoomType(VipAllocationRequest request, boolean allocatedReport) {
-        if (allocatedReport && request.getAllocatedRoom() != null) {
-            return request.getAllocatedRoom().getRoomType();
-        }
-        return request.getPreferredRoomType();
+        return tierMatch && keywordMatch;
     }
 
     private void sortRequestReport(VipAllocationRequest[] report, int sortChoice) {
@@ -475,13 +457,12 @@ public class VIPUI {
         return firstRoom.compareToIgnoreCase(secondRoom);
     }
 
-    private void printRequestReportCriteria(LoyaltyTier tierFilter, RoomType roomTypeFilter, String keyword,
-            int sortChoice, boolean allocatedReport) {
+    private void printRequestReportCriteria(LoyaltyTier tierFilter, String keyword, int sortChoice,
+            boolean allocatedReport) {
         System.out.println("\nReport Criteria");
-        System.out.println("Tier Filter     : " + (tierFilter == null ? "All" : tierFilter));
-        System.out.println("Room Type Filter: " + (roomTypeFilter == null ? "All" : roomTypeFilter));
-        System.out.println("Search Keyword  : " + (keyword == null || keyword.trim().isEmpty() ? "All" : keyword));
-        System.out.println("Sorted By       : " + getRequestSortName(sortChoice, allocatedReport));
+        System.out.println("Tier Filter   : " + (tierFilter == null ? "All" : tierFilter));
+        System.out.println("Search Keyword: " + (keyword == null || keyword.trim().isEmpty() ? "All" : keyword));
+        System.out.println("Sorted By     : " + getRequestSortName(sortChoice, allocatedReport));
         System.out.println();
     }
 
@@ -613,13 +594,26 @@ public class VIPUI {
         }
     }
 
-    private String readIcPassportNo() {
+    private String readGuestIdentityNo() {
+        System.out.println("Guest identity type");
+        System.out.println("1. Local Guest (IC Number)");
+        System.out.println("2. Foreign Guest (Passport Number)");
+        int identityType;
         while (true) {
-            String icPassportNo = readRequiredString("IC / Passport No: ");
-            if (icPassportNo.length() >= 8 && icPassportNo.length() <= 12) {
-                return icPassportNo;
+            identityType = readInt("Select identity type: ");
+            if (identityType == 1 || identityType == 2) {
+                break;
             }
-            System.out.println("IC / Passport No. must be 8-12 characters.");
+            System.out.println("Invalid identity type. Please enter 1 or 2.");
+        }
+
+        String label = identityType == 1 ? "IC Number" : "Passport Number";
+        while (true) {
+            String identityNo = readRequiredString(label + ": ");
+            if (identityNo.length() >= 8 && identityNo.length() <= 12) {
+                return identityNo;
+            }
+            System.out.println(label + " must be 8-12 characters.");
         }
     }
 
