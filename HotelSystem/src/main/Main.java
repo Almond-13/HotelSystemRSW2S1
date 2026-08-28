@@ -17,6 +17,7 @@ public class Main {
         HousekeepingManager hkManager = new HousekeepingManager(roomDAO.getRooms());
         WIRegistrationUI WIRUI = new WIRegistrationUI(input, roomDAO, hkManager);
         HousekeepingUI HKUI = new HousekeepingUI(input, hkManager);
+        LoyaltyRewardsUI loyaltyUI = new LoyaltyRewardsUI(input);
 
         int choice;
         do {
@@ -55,7 +56,6 @@ public class Main {
                     HKUI.run();
                     break;
                 case 4:
-                    LoyaltyRewardsUI loyaltyUI = new LoyaltyRewardsUI(input);
                     loyaltyUI.showMenu();
                     break;
                 case 0:
