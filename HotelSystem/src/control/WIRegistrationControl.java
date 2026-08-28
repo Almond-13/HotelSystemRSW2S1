@@ -30,7 +30,6 @@ public class WIRegistrationControl {
     public WIRegistrationControl(RoomDAO roomDAO, HousekeepingManager hkManager) {
 
         guestQueue = new CircularArrayQueue<>();
-        this.input = input;
         rooms = roomDAO.getRooms();
         book = new ArrayList<>();
         lastError = "";
