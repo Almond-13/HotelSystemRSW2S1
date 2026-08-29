@@ -1,3 +1,5 @@
+// Author: Lee Jit Jiun
+
 package control;
 
 import java.time.LocalDate;
@@ -215,7 +217,7 @@ public class LoyaltyRewardsControl {
 
         for (int i = 0; i < accounts.size(); i++) {
             LoyaltyAccount account = accounts.get(i);
-            int points = account.getTotalPoints();
+            int points = account.getLifetimePoints();
             if (points >= minimum && points <= maximum) {
                 result.add(account);
             }
@@ -237,14 +239,14 @@ public class LoyaltyRewardsControl {
         return result;
     }
 
-    public ArrayList<LoyaltyAccount> sortByTotalPointsDescending(ArrayList<LoyaltyAccount> source) {
+    public ArrayList<LoyaltyAccount> sortByLifetimePointsDescending(ArrayList<LoyaltyAccount> source) {
         ArrayList<LoyaltyAccount> sorted = cloneAccountList(source);
 
         for (int i = 1; i < sorted.size(); i++) {
             LoyaltyAccount current = sorted.get(i);
             int j = i - 1;
 
-            while (j >= 0 && sorted.get(j).getTotalPoints() < current.getTotalPoints()) {
+            while (j >= 0 && sorted.get(j).getLifetimePoints() < current.getLifetimePoints()) {
                 sorted.replace(j + 1, sorted.get(j));
                 j--;
             }
@@ -298,7 +300,7 @@ public class LoyaltyRewardsControl {
             }
         }
 
-        return sortByTotalPointsDescending(searched);
+        return sortByLifetimePointsDescending(searched);
     }
 
     public ArrayList<LoyaltyAccount> buildExpiringPointsReport(LocalDate today, int daysThreshold,

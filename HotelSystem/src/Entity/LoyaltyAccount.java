@@ -7,7 +7,6 @@ public class LoyaltyAccount {
     private String guestId;
     private String memberName;
     private String phoneNumber;
-    private int totalPoints;
     private int redeemablePoints;
     private int lifetimePoints;
     private TierLevel tierLevel;
@@ -23,7 +22,6 @@ public class LoyaltyAccount {
         this.guestId = "";
         this.memberName = "";
         this.phoneNumber = "";
-        this.totalPoints = 0;
         this.redeemablePoints = 0;
         this.lifetimePoints = 0;
         this.tierLevel = TierLevel.BRONZE;
@@ -73,14 +71,6 @@ public class LoyaltyAccount {
 
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
-    }
-
-    public int getTotalPoints() {
-        return totalPoints;
-    }
-
-    public void setTotalPoints(int totalPoints) {
-        this.totalPoints = totalPoints;
     }
 
     public int getRedeemablePoints() {
@@ -157,7 +147,6 @@ public class LoyaltyAccount {
 
     public void addPoints(int pointsToAdd) {
         if (pointsToAdd >= 0) {
-            totalPoints += pointsToAdd;
             lifetimePoints += pointsToAdd;
             redeemablePoints += pointsToAdd;
             lastActivityDate = LocalDate.now();
@@ -174,7 +163,6 @@ public class LoyaltyAccount {
 
         if (redeemablePoints >= pointsToRedeem) {
             redeemablePoints -= pointsToRedeem;
-            totalPoints -= pointsToRedeem;
             lastActivityDate = LocalDate.now();
             if (redeemablePoints <= 0) {
                 pointsExpiryDate = LocalDate.now().plusDays(30);
@@ -223,7 +211,7 @@ public class LoyaltyAccount {
         if (phoneNumber == null || phoneNumber.trim().isEmpty()) {
             return false;
         }
-        if (totalPoints < 0 || redeemablePoints < 0 || lifetimePoints < 0) {
+        if (redeemablePoints < 0 || lifetimePoints < 0) {
             return false;
         }
         return true;
@@ -236,7 +224,7 @@ public class LoyaltyAccount {
                 ", guestId='" + guestId + '\'' +
                 ", memberName='" + memberName + '\'' +
                 ", phoneNumber='" + phoneNumber + '\'' +
-                ", totalPoints=" + totalPoints +
+                ", lifetimePoints=" + lifetimePoints +
                 ", redeemablePoints=" + redeemablePoints +
                 ", lifetimePoints=" + lifetimePoints +
                 ", tierLevel=" + tierLevel +
