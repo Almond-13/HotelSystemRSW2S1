@@ -111,7 +111,8 @@ public class LoyaltyRewardsUI {
             if (success) {
                 LoyaltyAccount account = control.findAccountByMemberId(memberId);
                 System.out.println("Points added successfully.");
-                System.out.println("Updated points: " + account.getTotalPoints());
+                System.out.println("Lifetime points: " + account.getLifetimePoints());
+                System.out.println("Redeemable points: " + account.getRedeemablePoints());
                 System.out.println("Updated tier: " + account.getTierLevel());
             } else {
                 System.out.println("Error: " + control.getLastError());
@@ -134,8 +135,8 @@ public class LoyaltyRewardsUI {
             if (success) {
                 LoyaltyAccount account = control.findAccountByMemberId(memberId);
                 System.out.println("Redemption successful.");
-                System.out.println("Remaining total points: " + account.getTotalPoints());
-                System.out.println("Remaining redeemable points: " + account.getRedeemablePoints());
+                System.out.println("Lifetime points: " + account.getLifetimePoints());
+                System.out.println("Redeemable points: " + account.getRedeemablePoints());
                 System.out.println("Updated tier: " + account.getTierLevel());
             } else {
                 System.out.println("Error: " + control.getLastError());
@@ -161,7 +162,7 @@ public class LoyaltyRewardsUI {
             System.out.println("Name: " + account.getMemberName());
             System.out.println("Guest ID: " + account.getGuestId());
             System.out.println("Tier: " + account.getTierLevel());
-            System.out.println("Total Points: " + account.getTotalPoints());
+            System.out.println("Lifetime Points: " + account.getLifetimePoints());
             System.out.println("Redeemable Points: " + account.getRedeemablePoints());
             System.out.println("Phone: " + account.getPhoneNumber());
         }
@@ -226,7 +227,7 @@ public class LoyaltyRewardsUI {
             System.out.println("Member ID: " + account.getMemberId());
             System.out.println("Name: " + account.getMemberName());
             System.out.println("Tier: " + account.getTierLevel());
-            System.out.println("Total Points: " + account.getTotalPoints());
+            System.out.println("Lifetime Points: " + account.getLifetimePoints());
             System.out.println("Redeemable Points: " + account.getRedeemablePoints());
         }
     }
