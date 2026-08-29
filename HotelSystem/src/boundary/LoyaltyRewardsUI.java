@@ -229,6 +229,12 @@ public class LoyaltyRewardsUI {
             System.out.println("Tier: " + account.getTierLevel());
             System.out.println("Lifetime Points: " + account.getLifetimePoints());
             System.out.println("Redeemable Points: " + account.getRedeemablePoints());
+
+            // Display expiry date if available (for expiring points report)
+            String notificationMessage = account.getNotificationMessage();
+            if (notificationMessage != null && !notificationMessage.isEmpty()) {
+                System.out.println("Expiry Date: " + account.getPointsExpiryDate());
+            }
         }
     }
 }
